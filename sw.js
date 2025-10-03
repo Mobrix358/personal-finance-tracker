@@ -1,27 +1,49 @@
-// Simple offline cache for the tracker
-const CACHE = "pft-v1";
-self.addEventListener("install", (e) => self.skipWaiting());
-self.addEventListener("activate", (e) => {
-  e.waitUntil((async () => {
-    const keys = await caches.keys();
-    await Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)));
-    await self.clients.claim();
-  })());
+const CACHE_NAME = 'finance-tracker-v1';
+const urlsToCache = [
+  '/',
+  '/index.html',
+  '/app.js',
+  '/manifest.json'
+];
+
+// Install service worker
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        console.log('Opened cache');
+        return cache.addAll(urlsToCache);
+      })
+  );
 });
-self.addEventListener("fetch", (e) => {
-  const req = e.request;
-  if (req.method !== "GET" || new URL(req.url).origin !== self.location.origin) return;
-  e.respondWith((async () => {
-    const cache = await caches.open(CACHE);
-    const cached = await cache.match(req);
-    if (cached) return cached;
-    try {
-      const res = await fetch(req);
-      cache.put(req, res.clone());
-      return res;
-    } catch (err) {
-      if (cached) return cached;
-      throw err;
-    }
-  })());
+
+// Fetch files from cache
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => {
+        // Cache hit - return response
+        if (response) {
+          return response;
+        }
+        return fetch(event.request);
+      }
+    )
+  );
+});
+
+// Update service worker
+self.addEventListener('activate', event => {
+  const cacheWhitelist = [CACHE_NAME];
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheWhitelist.indexOf(cacheName) === -1) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
 });
