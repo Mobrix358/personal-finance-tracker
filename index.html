@@ -592,20 +592,10 @@
           <div class="appbar-title">Personal Finance Tracker</div>
           <div class="appbar-sub" id="appSub">Overview</div>
         </div>
-        <button class="btn ghost" id="toggleThemeBtn" title="Toggle dark/light" style="padding:10px 14px; min-height:40px;">Theme</button>
       </div>
       <div class="appbar-balance">
         <div class="label">Total balance</div>
         <div class="amount mono" id="totalBalance">PHP 0.00</div>
-      </div>
-      <div class="toolbar spaced" style="margin-top:12px">
-        <button class="btn accent hidden" id="installBtn" style="padding:10px 14px; min-height:40px;">Install</button>
-        <button class="btn ghost" id="demoDataBtn" title="Load demo data" style="padding:10px 14px; min-height:40px;">Demo</button>
-        <button class="btn warn" id="backupBtn" style="padding:10px 14px; min-height:40px;">Export</button>
-        <label class="btn ghost" for="importFile" style="padding:10px 14px; min-height:40px;">Import
-          <input id="importFile" type="file" accept=".json,.csv" style="display:none" />
-        </label>
-        <button class="btn danger" id="clearBtn" style="padding:10px 14px; min-height:40px;">Clear</button>
       </div>
     </header>
 
@@ -828,11 +818,6 @@
         const total = (Data.state.accounts||[]).reduce((s,a)=>s+(a._computed||0),0);
         const tb = document.getElementById('totalBalance'); if(tb) tb.textContent = U.fmtMoney(total);
         const sub = document.getElementById('appSub'); if(sub){ const tabLabel=(UI.tabs.find(x=>x.id===UI.current)||{}).label||'Overview'; sub.textContent = tabLabel; }
-        document.getElementById('toggleThemeBtn').onclick = ()=>{ Data.state.settings.theme = Data.state.settings.theme==='light'?'dark':'light'; Data.save(); document.documentElement.setAttribute('data-theme', Data.state.settings.theme); };
-        document.getElementById('backupBtn').onclick = UI.exportData;
-        document.getElementById('clearBtn').onclick = ()=>{ if(confirm('This removes all data. Continue?')){ Data.reset(); Accounts.recalcBalances(); UI.render(); } };
-        document.getElementById('importFile').addEventListener('change', UI.importData);
-        document.getElementById('demoDataBtn').onclick = Demo.load;
       },
       show(id){ UI.current=id; UI.init(); },
       render(){
@@ -1374,18 +1359,29 @@
         };
 
         const right = document.createElement('div'); right.className='card';
-        right.innerHTML = `<strong style="font-size:17px">Data</strong>
+        right.innerHTML = `<strong style="font-size:17px">Data Management</strong>
           <div style="display:flex; flex-direction:column; gap:10px; margin-top:16px">
+            <button class="btn accent hidden" id="installBtnSettings">Install App</button>
+            <button class="btn ghost" id="demoDataBtnSettings">Load Demo Data</button>
             <button class="btn warn" id="dExport">Export JSON</button>
             <button class="btn ghost" id="dExportCsv">Export CSV</button>
             <label class="btn ghost" for="dImport" style="text-align:center">Import JSON/CSV
               <input id="dImport" type="file" accept=".json,.csv" style="display:none"/>
             </label>
+            <button class="btn danger" id="clearBtnSettings">Clear All Data</button>
           </div>
           <div class="hint spaced">CSV import expects columns: type,ts,amount,accountId,fromId,toId,category,subcategory,vendor,brand,method,notes,receiptUrl,tax,recurring</div>`;
         right.querySelector('#dExport').onclick = UI.exportData;
         right.querySelector('#dExportCsv').onclick = ()=>UI.exportCSV(Tx.list());
         right.querySelector('#dImport').addEventListener('change', UI.importData);
+        right.querySelector('#demoDataBtnSettings').onclick = Demo.load;
+        right.querySelector('#clearBtnSettings').onclick = ()=>{ 
+          if(confirm('This removes all data. Continue?')){ 
+            Data.reset(); 
+            Accounts.recalcBalances(); 
+            UI.render(); 
+          } 
+        };
 
         wrap.appendChild(left); wrap.appendChild(right); return wrap;
       },
@@ -1583,23 +1579,24 @@
     window.addEventListener('beforeinstallprompt', (e)=>{
       e.preventDefault();
       _deferredPrompt = e;
-      const btn = document.getElementById('installBtn'); 
+      const btn = document.getElementById('installBtnSettings'); 
       if(btn) btn.classList.remove('hidden');
     });
     
-    const installBtn = document.getElementById('installBtn');
-    if(installBtn){ 
-      installBtn.addEventListener('click', async ()=>{
+    document.addEventListener('click', (e) => {
+      if(e.target.id === 'installBtnSettings'){
         if(_deferredPrompt){ 
           _deferredPrompt.prompt(); 
-          await _deferredPrompt.userChoice; 
-          _deferredPrompt=null; 
-          installBtn.classList.add('hidden'); 
+          _deferredPrompt.userChoice.then(() => {
+            _deferredPrompt=null; 
+            const btn = document.getElementById('installBtnSettings');
+            if(btn) btn.classList.add('hidden');
+          });
         } else { 
           alert('On Android Chrome use the menu then "Install app" or "Add to Home screen".'); 
         }
-      }); 
-    }
+      }
+    });
 
     if('serviceWorker' in navigator){
       navigator.serviceWorker.register('./sw.js').catch(()=>{});
