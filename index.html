@@ -718,13 +718,17 @@
                 <div id="budgetsList"></div>
             </div>
 
-            <!-- Reports Tab -->
+           <!-- Reports Tab -->
             <div class="tab-content" id="reports">
+                <div class="card">
+                    <h3>Spend Analyzer</h3>
+                    <div id="spendAnalyzer"></div>
+                </div>
+
                 <div class="card">
                     <h3>Spending by Category</h3>
                     <div id="categoryReport"></div>
                 </div>
-
                 <div class="card">
                     <h3>Monthly Comparison</h3>
                     <div id="monthlyComparison"></div>
@@ -972,10 +976,20 @@
                 </div>
             </div>
 
-            <div class="form-group">
+<div class="form-group">
                 <label class="form-label">Amount Lent (₱)</label>
                 <input type="number" step="0.01" class="form-input" id="debtAmount">
             </div>
+
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" class="form-checkbox" id="debtExisting">
+                    This is an existing debt (don't deduct from account)
+                </label>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Method of Lending</label>
 
             <div class="form-group">
                 <label class="form-label">Method of Lending</label>
