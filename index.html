@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <meta name="theme-color" content="#7c4dff" />
   <link rel="manifest" href="manifest.json" />
   <title>Personal Finance Tracker</title>
@@ -13,98 +13,576 @@
       --surface: #0f1117;
       --muted: #9aa3b2;
       --text: #f4f6fb;
-      --primary: #7c4dff; /* purple base */
-      --primary-2: #9b6bff; /* lighter */
+      --primary: #7c4dff;
+      --primary-2: #9b6bff;
       --accent: #7bd389;
       --warn: #ffb86b;
       --danger: #ff6b6b;
       --border: #232735;
       --shadow: 0 12px 32px rgba(0,0,0,.35);
-      --radius: 20px;
+      --radius: 16px;
     }
     [data-theme="light"]{
       --bg:#f5f6fb; --card:#ffffff; --surface:#ffffff; --muted:#6b7280; --text:#0b0c10; --border:#e7e7ef;
     }
-    html, body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; background:var(--bg); color:var(--text); padding-bottom:84px; }
-    body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      background:var(--bg); color:var(--text); }
-    .container { max-width:1100px; margin:0 auto; padding:24px; }
-    header { position:sticky; top:0; z-index:10; margin-bottom:12px; }
-    .title { font-size:22px; font-weight:800; letter-spacing:.2px; }
-    .subtle { color:var(--muted); font-size:13px; }
-    .row { display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
-    .tabs { position:fixed; left:0; right:0; bottom:0; z-index:20; display:flex; justify-content:space-around; padding:6px 10px; background:var(--surface); border-top:1px solid var(--border); }
-    .tab { flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; padding:8px 6px; border:none; background:transparent; color:var(--muted); cursor:pointer; border-radius:12px; font-weight:700; }
-    .tab.active { color:#fff; background:linear-gradient(135deg, var(--primary), var(--primary-2)); }
-    .card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; }
-    .grid { display:grid; gap:12px; }
-    .grid.two { grid-template-columns:1fr; }
-    .grid.three { grid-template-columns:1fr; }
-    @media(min-width:900px){ .grid.two { grid-template-columns:1fr 1fr; } .grid.three { grid-template-columns:1fr 1fr 1fr; } }
-    label { font-size:12px; color:var(--muted); display:block; margin-bottom:6px; }
-    input[type="text"], input[type="number"], input[type="datetime-local"], select, textarea { width:100%; padding:12px; border-radius:12px; border:1px solid var(--border); background:transparent; color:var(--text); outline:none; }
-    textarea { min-height:72px; resize:vertical; }
-    .btn { appearance:none; border:none; padding:12px 14px; border-radius:12px; cursor:pointer; font-weight:700; }
-    .btn.primary { background:var(--primary); color:#fff; }
-    .btn.accent { background:var(--accent); color:#0b0c10; }
-    .btn.ghost { background:transparent; border:1px solid var(--border); color:var(--text); }
-    .btn.warn { background:var(--warn); color:#0b0c10; }
-    .btn.danger { background:var(--danger); color:#fff; }
-    .toolbar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-    table { width:100%; border-collapse:separate; border-spacing:0 8px; }
-    th, td { text-align:left; font-size:13px; }
-    th { color:var(--muted); font-weight:600; padding:4px 8px; }
-    tr { background:var(--card); }
-    td { padding:10px 8px; border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
-    tr td:first-child { border-left:1px solid var(--border); border-top-left-radius:10px; border-bottom-left-radius:10px; }
-    tr td:last-child { border-right:1px solid var(--border); border-top-right-radius:10px; border-bottom-right-radius:10px; }
-    .pill { padding:4px 8px; border-radius:999px; font-size:11px; border:1px solid var(--border); color:var(--muted); }
-    .pill.type-income { color:#0f5132; background:#d1f1e0; border-color:#b3e7cc; }
-    .pill.type-expense { color:#842029; background:#ffd8dc; border-color:#ffc2c7; }
-    .pill.type-transfer { color:#084298; background:#d6e6ff; border-color:#bcd5ff; }
-    .pill.type-loss { color:#7a2e0e; background:#ffe6d3; border-color:#ffd6b4; }
-    .pill.type-loan { color:#3b2f5c; background:#e7defa; border-color:#d7ccf7; }
+    
+    * { box-sizing: border-box; }
+    
+    html, body { 
+      margin:0; 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background:var(--bg); 
+      color:var(--text); 
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    body { 
+      padding-bottom:90px;
+      overflow-x: hidden;
+    }
+    
+    .container { 
+      max-width:100%; 
+      margin:0 auto; 
+      padding:16px;
+    }
+    
+    header { 
+      position:sticky; 
+      top:0; 
+      z-index:10; 
+      margin-bottom:16px;
+      margin-left: -16px;
+      margin-right: -16px;
+      margin-top: -16px;
+    }
+    
+    .title { 
+      font-size:18px; 
+      font-weight:800; 
+      letter-spacing:.2px; 
+    }
+    
+    .subtle { 
+      color:var(--muted); 
+      font-size:14px; 
+    }
+    
+    .row { 
+      display:flex; 
+      flex-wrap:wrap; 
+      gap:10px; 
+      align-items:center; 
+    }
+    
+    .tabs { 
+      position:fixed; 
+      left:0; 
+      right:0; 
+      bottom:0; 
+      z-index:20; 
+      display:flex; 
+      justify-content:space-around; 
+      padding:8px 6px 8px 6px;
+      background:var(--surface); 
+      border-top:1px solid var(--border);
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
+    }
+    
+    .tab { 
+      flex:1; 
+      display:flex; 
+      flex-direction:column; 
+      align-items:center; 
+      gap:4px; 
+      padding:10px 8px; 
+      border:none; 
+      background:transparent; 
+      color:var(--muted); 
+      cursor:pointer; 
+      border-radius:12px; 
+      font-weight:700;
+      min-height: 60px;
+      touch-action: manipulation;
+    }
+    
+    .tab.active { 
+      color:#fff; 
+      background:linear-gradient(135deg, var(--primary), var(--primary-2)); 
+    }
+    
+    .card { 
+      background:var(--card); 
+      border:1px solid var(--border); 
+      border-radius:var(--radius); 
+      box-shadow:var(--shadow); 
+      padding:16px; 
+      margin-bottom:16px;
+    }
+    
+    .grid { 
+      display:grid; 
+      gap:16px; 
+    }
+    
+    .grid.two { 
+      grid-template-columns:1fr; 
+    }
+    
+    .grid.three { 
+      grid-template-columns:1fr; 
+    }
+    
+    label { 
+      font-size:14px; 
+      color:var(--muted); 
+      display:block; 
+      margin-bottom:8px;
+      font-weight: 500;
+    }
+    
+    input[type="text"], 
+    input[type="number"], 
+    input[type="date"],
+    input[type="datetime-local"], 
+    select, 
+    textarea { 
+      width:100%; 
+      padding:14px; 
+      border-radius:12px; 
+      border:1px solid var(--border); 
+      background:var(--surface); 
+      color:var(--text); 
+      outline:none;
+      font-size: 16px;
+      min-height: 48px;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239aa3b2' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 36px;
+    }
+    
+    textarea { 
+      min-height:100px; 
+      resize:vertical;
+      line-height: 1.5;
+    }
+    
+    .btn { 
+      appearance:none; 
+      border:none; 
+      padding:14px 18px; 
+      border-radius:12px; 
+      cursor:pointer; 
+      font-weight:700;
+      font-size: 15px;
+      min-height: 48px;
+      touch-action: manipulation;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+    }
+    
+    .btn.primary { 
+      background:var(--primary); 
+      color:#fff; 
+    }
+    
+    .btn.accent { 
+      background:var(--accent); 
+      color:#0b0c10; 
+    }
+    
+    .btn.ghost { 
+      background:transparent; 
+      border:1px solid var(--border); 
+      color:var(--text); 
+    }
+    
+    .btn.warn { 
+      background:var(--warn); 
+      color:#0b0c10; 
+    }
+    
+    .btn.danger { 
+      background:var(--danger); 
+      color:#fff; 
+    }
+    
+    .toolbar { 
+      display:flex; 
+      gap:10px; 
+      flex-wrap:wrap; 
+      align-items:center; 
+    }
+    
+    table { 
+      width:100%; 
+      border-collapse:collapse;
+      font-size: 14px;
+    }
+    
+    th, td { 
+      text-align:left; 
+      padding:12px 8px;
+    }
+    
+    th { 
+      color:var(--muted); 
+      font-weight:600;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    tr { 
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .pill { 
+      padding:6px 10px; 
+      border-radius:999px; 
+      font-size:12px; 
+      border:1px solid var(--border); 
+      color:var(--muted);
+      display: inline-block;
+      white-space: nowrap;
+    }
+    
+    .pill.type-income { 
+      color:#0f5132; 
+      background:#d1f1e0; 
+      border-color:#b3e7cc; 
+    }
+    
+    .pill.type-expense { 
+      color:#842029; 
+      background:#ffd8dc; 
+      border-color:#ffc2c7; 
+    }
+    
+    .pill.type-transfer { 
+      color:#084298; 
+      background:#d6e6ff; 
+      border-color:#bcd5ff; 
+    }
+    
+    .pill.type-loss { 
+      color:#7a2e0e; 
+      background:#ffe6d3; 
+      border-color:#ffd6b4; 
+    }
+    
+    .pill.type-loan { 
+      color:#3b2f5c; 
+      background:#e7defa; 
+      border-color:#d7ccf7; 
+    }
+    
     .right { text-align:right; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-    .hint { font-size:12px; color:var(--muted); }
-    .flex-between { display:flex; align-items:center; justify-content:space-between; gap:8px; }
-    .progress { height:8px; background:#1f2430; border-radius:999px; overflow:hidden; border:1px solid var(--border); }
-    .progress > div { height:100%; background:var(--accent); width:0%; }
-    .inline { display:flex; gap:8px; align-items:center; }
-    .spaced { margin-top:12px; }
+    
+    .mono { 
+      font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+    }
+    
+    .hint { 
+      font-size:13px; 
+      color:var(--muted);
+      line-height: 1.5;
+    }
+    
+    .flex-between { 
+      display:flex; 
+      align-items:center; 
+      justify-content:space-between; 
+      gap:10px;
+      flex-wrap: wrap;
+    }
+    
+    .progress { 
+      height:10px; 
+      background:#1f2430; 
+      border-radius:999px; 
+      overflow:hidden; 
+      border:1px solid var(--border); 
+    }
+    
+    .progress > div { 
+      height:100%; 
+      background:var(--accent); 
+      width:0%; 
+      transition: width 0.3s ease;
+    }
+    
+    .inline { 
+      display:flex; 
+      gap:10px; 
+      align-items:center;
+      flex-wrap: wrap;
+    }
+    
+    .spaced { margin-top:16px; }
+    
     .hidden { display:none !important; }
-    .badge { font-size:11px; color:var(--muted); padding:3px 8px; border:1px solid var(--border); border-radius:999px; }
+    
+    .badge { 
+      font-size:12px; 
+      color:var(--muted); 
+      padding:4px 10px; 
+      border:1px solid var(--border); 
+      border-radius:999px;
+      display: inline-block;
+      white-space: nowrap;
+    }
+    
     .shadow-sm { box-shadow:0 4px 12px rgba(0,0,0,.18); }
-    .list { display:grid; gap:8px; }
-    .touch-reveal { position:relative; overflow:hidden; }
-    .reveal-actions { position:absolute; inset:0; display:flex; justify-content:flex-end; align-items:center; gap:8px; padding-right:8px; background:linear-gradient(90deg, transparent 40%, rgba(255, 107, 107,.08)); pointer-events:none; }
-    .reveal-actions .btn { pointer-events:auto; }
-    .notice { padding:10px 12px; border:1px dashed var(--border); border-radius:12px; }
-    .highlight { color:var(--primary); font-weight:700; }
-    canvas { width:100%; max-width:100%; height:280px; background:transparent; border:1px solid var(--border); border-radius:12px; }
-    .kpi { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-    .kpi .card { text-align:center; }
-    /* Force readable dropdown items across browsers */
-  select option, select optgroup { color:#000 !important; background:#fff !important; }
-  [data-theme="dark"] select option, [data-theme="dark"] select optgroup { color:#000 !important; background:#fff !important; }
-  /* Improve Windows/Edge selected value color */
-  select::-ms-value { color:#000 !important; background:#fff !important; }
-  /* Force readable dropdown items across browsers */
-  select option, select optgroup { color:#000 !important; background:#fff !important; }
-  [data-theme="dark"] select option, [data-theme="dark"] select optgroup { color:#000 !important; background:#fff !important; }
-  select::-ms-value { color:#000 !important; background:#fff !important; }
+    
+    .list { 
+      display:grid; 
+      gap:12px; 
+    }
+    
+    .notice { 
+      padding:14px; 
+      border:1px dashed var(--border); 
+      border-radius:12px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    
+    .highlight { 
+      color:var(--primary); 
+      font-weight:700; 
+    }
+    
+    canvas { 
+      width:100%; 
+      max-width:100%; 
+      height:240px; 
+      background:transparent; 
+      border:1px solid var(--border); 
+      border-radius:12px;
+      touch-action: pan-y;
+    }
+    
+    .kpi { 
+      display:grid; 
+      grid-template-columns:1fr 1fr; 
+      gap:12px; 
+    }
+    
+    .kpi .card { 
+      text-align:center;
+      padding: 14px;
+    }
+    
+    select option, select optgroup { 
+      color:#000 !important; 
+      background:#fff !important; 
+    }
+    
+    [data-theme="dark"] select option, 
+    [data-theme="dark"] select optgroup { 
+      color:#000 !important; 
+      background:#fff !important; 
+    }
+    
+    select::-ms-value { 
+      color:#000 !important; 
+      background:#fff !important; 
+    }
 
-  /* Appbar styles */
-  .appbar { background:linear-gradient(135deg, var(--primary), var(--primary-2)); color:#fff; border-bottom-left-radius:20px; border-bottom-right-radius:20px; padding:16px; box-shadow:0 8px 24px rgba(124,77,255,.35); }
-  .appbar-top { display:flex; align-items:center; justify-content:space-between; gap:12px; }
-  .appbar-title { font-size:16px; opacity:.85; }
-  .appbar-sub { font-size:12px; opacity:.8; }
-  .appbar-balance { margin-top:8px; }
-  .appbar-balance .label { font-size:12px; opacity:.9; }
-  .appbar-balance .amount { font-size:28px; font-weight:800; letter-spacing:.3px; }
-  .tabs .ico { font-size:16px; line-height:1; }
-  .tabs .txt { font-size:11px; font-weight:700; }
-</style>
+    .appbar { 
+      background:linear-gradient(135deg, var(--primary), var(--primary-2)); 
+      color:#fff; 
+      border-bottom-left-radius:20px; 
+      border-bottom-right-radius:20px; 
+      padding:20px 16px 16px 16px;
+      padding-top: max(20px, env(safe-area-inset-top));
+      box-shadow:0 8px 24px rgba(124,77,255,.35); 
+    }
+    
+    .appbar-top { 
+      display:flex; 
+      align-items:center; 
+      justify-content:space-between; 
+      gap:12px;
+      margin-bottom: 12px;
+    }
+    
+    .appbar-title { 
+      font-size:15px; 
+      opacity:.85;
+      font-weight: 600;
+    }
+    
+    .appbar-sub { 
+      font-size:13px; 
+      opacity:.8;
+      margin-top: 2px;
+    }
+    
+    .appbar-balance { 
+      margin-top:10px; 
+    }
+    
+    .appbar-balance .label { 
+      font-size:13px; 
+      opacity:.9; 
+    }
+    
+    .appbar-balance .amount { 
+      font-size:26px; 
+      font-weight:800; 
+      letter-spacing:.3px;
+      margin-top: 4px;
+    }
+    
+    .tabs .ico { 
+      font-size:18px; 
+      line-height:1; 
+    }
+    
+    .tabs .txt { 
+      font-size:10px; 
+      font-weight:700; 
+    }
+    
+    input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      margin: 0;
+      cursor: pointer;
+    }
+    
+    .mobile-table-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    
+    .mobile-table-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    
+    .mobile-table-row:last-child {
+      margin-bottom: 0;
+    }
+    
+    .mobile-table-label {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    
+    .mobile-table-value {
+      font-size: 14px;
+      text-align: right;
+    }
+    
+    @media(min-width:600px){
+      body { font-size: 15px; }
+      .container { padding: 20px; max-width: 900px; }
+      .grid.two { grid-template-columns:1fr 1fr; }
+      .card { padding: 20px; }
+      canvas { height: 280px; }
+    }
+    
+    @media(min-width:900px){ 
+      .grid.three { grid-template-columns:1fr 1fr 1fr; }
+    }
+
+    #calcModal {
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.7);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:100;
+      padding: 16px;
+    }
+    
+    #calcModal .card {
+      width:100%;
+      max-width:380px;
+      margin: 0;
+    }
+    
+    #calcModal .toolbar {
+      margin-top: 10px;
+    }
+    
+    #calcModal .toolbar .btn {
+      flex: 1;
+      min-width: 0;
+      padding: 16px 12px;
+      font-size: 16px;
+    }
+    
+    .transaction-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+      position: relative;
+    }
+    
+    .transaction-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+      gap: 10px;
+    }
+    
+    .transaction-amount {
+      font-size: 18px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    
+    .transaction-details {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    
+    .transaction-meta {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+    
+    .transaction-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+    
+    .transaction-actions .btn {
+      flex: 1;
+      padding: 10px;
+      font-size: 14px;
+      min-height: 40px;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
@@ -114,36 +592,34 @@
           <div class="appbar-title">Personal Finance Tracker</div>
           <div class="appbar-sub" id="appSub">Overview</div>
         </div>
-        <button class="btn ghost" id="toggleThemeBtn" title="Toggle dark/light">Theme</button>
+        <button class="btn ghost" id="toggleThemeBtn" title="Toggle dark/light" style="padding:10px 14px; min-height:40px;">Theme</button>
       </div>
       <div class="appbar-balance">
         <div class="label">Total balance</div>
         <div class="amount mono" id="totalBalance">PHP 0.00</div>
       </div>
-      <div class="toolbar spaced" style="margin-top:10px">
-        <button class="btn accent hidden" id="installBtn">Install</button>
-        <button class="btn ghost" id="demoDataBtn" title="Load demo data">Load demo</button>
-        <button class="btn warn" id="backupBtn">Export</button>
-        <label class="btn ghost" for="importFile">Import
+      <div class="toolbar spaced" style="margin-top:12px">
+        <button class="btn accent hidden" id="installBtn" style="padding:10px 14px; min-height:40px;">Install</button>
+        <button class="btn ghost" id="demoDataBtn" title="Load demo data" style="padding:10px 14px; min-height:40px;">Demo</button>
+        <button class="btn warn" id="backupBtn" style="padding:10px 14px; min-height:40px;">Export</button>
+        <label class="btn ghost" for="importFile" style="padding:10px 14px; min-height:40px;">Import
           <input id="importFile" type="file" accept=".json,.csv" style="display:none" />
         </label>
-        <button class="btn danger" id="clearBtn">Clear All</button>
+        <button class="btn danger" id="clearBtn" style="padding:10px 14px; min-height:40px;">Clear</button>
       </div>
     </header>
 
     <nav class="tabs" id="tabs"></nav>
 
     <main id="views" class="grid">
-      <!-- views injected by JS -->
     </main>
   </div>
 
-  <!-- Calculator Modal -->
-  <div id="calcModal" class="hidden" style="position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex; align-items:center; justify-content:center; z-index:50;">
-    <div class="card" style="width:340px;">
-      <div class="flex-between"><strong>Calculator</strong><button class="btn ghost" onclick="UI.hideCalc()">Close</button></div>
+  <div id="calcModal" class="hidden">
+    <div class="card">
+      <div class="flex-between"><strong>Calculator</strong><button class="btn ghost" onclick="UI.hideCalc()" style="padding:10px 14px; min-height:40px;">Close</button></div>
       <input id="calcInput" type="text" class="spaced mono" placeholder="e.g. 1200+350*0.5" />
-      <div class="toolbar spaced">
+      <div class="toolbar">
         <button class="btn" onclick="UI.calcInsert('7')">7</button>
         <button class="btn" onclick="UI.calcInsert('8')">8</button>
         <button class="btn" onclick="UI.calcInsert('9')">9</button>
@@ -172,19 +648,16 @@
   </div>
 
   <script>
-    /* ==========================
-       Storage + Data Structures
-       ========================== */
     const DB_KEY = 'pft_data_v1';
     const defaultCurrency = 'PHP';
 
     const Data = {
       state: {
-        accounts: [],      // {id, name, type, currency, balance}
-        transactions: [],  // {id, ts, amount, type, accountId, fromId, toId, category, subcategory, vendor, brand, items:[], method, notes, receiptUrl, tax, recurring, splits:[{category, subcategory, amount}], links:[], loanId}
-        loans: [],         // {id, person, principal, date, method, purpose, expDate, rate, status:'open'|'paid'|'forgiven', outstanding}
-        budgets: [],       // {id, month:'YYYY-MM', category, amount, rollover:boolean}
-        templates: [],     // {id, name, payload}
+        accounts: [],
+        transactions: [],
+        loans: [],
+        budgets: [],
+        templates: [],
         categories: {
           income: ['Salary','Freelance','Investments','Tax Return','Gifts','Other Income'],
           expense: {
@@ -208,9 +681,6 @@
     };
     Data.load();
 
-    /* ==========================
-       Utilities
-       ========================== */
     const U = {
       id:()=>'id_'+Math.random().toString(36).slice(2,10),
       nowLocal(){
@@ -226,10 +696,8 @@
       sum(arr, fn){ return arr.reduce((a,b)=>a+(fn?fn(b):b),0); },
       clamp(n,min,max){ return Math.max(min, Math.min(max, n)); },
       parseAmount(expr){
-        // Safe numeric expression parser for + - * / and parentheses
-        // Reject invalid characters
         if(!/^[0-9+\-*/().\s]+$/.test(expr)) return NaN;
-        try{ // eslint-disable-next-line no-new-func
+        try{
           const f = new Function(`return (${expr})`);
           const v = f();
           return typeof v === 'number' && isFinite(v) ? v : NaN;
@@ -237,9 +705,6 @@
       }
     };
 
-    /* ==========================
-       Accounts Logic
-       ========================== */
     const Accounts = {
       list(){ return Data.state.accounts; },
       get(id){ return Data.state.accounts.find(a=>a.id===id); },
@@ -248,19 +713,17 @@
         Data.state.accounts.push(a); Data.save(); return a;
       },
       update(id, patch){ Object.assign(this.get(id)||{}, patch); Data.save(); },
-      remove(id){ Data.state.accounts = Data.state.accounts.filter(a=>a.id!==id); // also detach
+      remove(id){ Data.state.accounts = Data.state.accounts.filter(a=>a.id!==id);
         Data.state.transactions = Data.state.transactions.filter(t=>t.accountId!==id && t.fromId!==id && t.toId!==id);
         Data.save(); },
       recalcBalances(){
-        // Base zero then apply transactions in chronological order
         const base = Object.fromEntries(Data.state.accounts.map(a=>[a.id,0]));
-        // include opening balances as synthetic income
         Data.state.accounts.forEach(a=>{ base[a.id]+=Number(a.balance)||0; a._opening = Number(a.balance)||0; });
         const tx = [...Data.state.transactions].sort((a,b)=>a.ts-b.ts);
         for(const t of tx){
           if(t.type==='income') base[t.accountId]+=t.amount;
           if(t.type==='expense') base[t.accountId]-=t.amount;
-          if(t.type==='loss') base[t.accountId]-=t.amount; // coin loss feature
+          if(t.type==='loss') base[t.accountId]-=t.amount;
           if(t.type==='transfer'){ base[t.fromId]-=t.amount; base[t.toId]+=t.amount; }
           if(t.type==='loan-repay' && t.accountId){ base[t.accountId]-=t.amount; }
           if(t.type==='loan-received' && t.accountId){ base[t.accountId]+=t.amount; }
@@ -270,9 +733,6 @@
       }
     };
 
-    /* ==========================
-       Transactions Logic
-       ========================== */
     const Tx = {
       list(){ return Data.state.transactions; },
       add(t){ t.id = U.id(); t.ts = new Date(t.ts||Date.now()).getTime(); Data.state.transactions.push(t); Data.save(); Accounts.recalcBalances(); return t; },
@@ -281,9 +741,6 @@
       filter(pred){ return this.list().filter(pred); }
     };
 
-    /* ==========================
-       Budgets Logic
-       ========================== */
     const Budgets = {
       list(){ return Data.state.budgets; },
       set(month, category, amount, rollover){
@@ -293,7 +750,6 @@
         Data.save();
       },
       progress(month){
-        // Returns map {category: {spent, budget, pct}}
         const out = {};
         const spend = Tx.filter(t=>['expense','loss'].includes(t.type) && U.monthKey(t.ts)===month);
         for(const t of spend){ const k = t.category||'Uncategorised'; out[k] = out[k]||{spent:0, budget:0}; out[k].spent += t.amount; }
@@ -303,9 +759,6 @@
       }
     };
 
-    /* ==========================
-       Loans Logic (Lending tracker)
-       ========================== */
     const Loans = {
       list(){ return Data.state.loans; },
       get(id){ return Data.state.loans.find(l=>l.id===id); },
@@ -319,7 +772,7 @@
         const tx = Tx.add({ type:'loan-repay', ts: new Date(date||Date.now()).getTime(), amount, accountId, method, notes, loanId });
         Data.save(); return {loan:l, tx};
       },
-      receive(loanId, {amount, date, accountId, method, notes}){ // repayment received (money coming in)
+      receive(loanId, {amount, date, accountId, method, notes}){
         const l = this.get(loanId); if(!l) return;
         amount = Number(amount)||0; l.outstanding = U.clamp((l.outstanding-amount),0,1e12); if(l.outstanding===0) l.status='paid';
         const tx = Tx.add({ type:'loan-received', ts: new Date(date||Date.now()).getTime(), amount, accountId, method, notes, loanId });
@@ -328,18 +781,14 @@
       writeOff(loanId){ const l=this.get(loanId); if(l){ l.status='forgiven'; l.outstanding=0; Data.save(); } }
     };
 
-    /* ==========================
-       Reports (Simple Canvas charts)
-       ========================== */
     const Reports = {
       categorySpend(month){
         const rows = Tx.filter(t=>['expense','loss'].includes(t.type) && U.monthKey(t.ts)===month);
         const map = {};
         for(const t of rows){ const k = t.type==='loss' ? 'Loss' : (t.category||'Uncategorised'); map[k] = (map[k]||0) + t.amount; }
-        return map; // {category: amount}
+        return map;
       },
       trendMonthly(lastN=6){
-        // returns [{month, income, expense, net}]
         const tx = Tx.list();
         const months = new Set(tx.map(t=>U.monthKey(t.ts)));
         const arr = [...months].sort().slice(-lastN);
@@ -351,24 +800,19 @@
       }
     };
 
-    /* ==========================
-       UI
-       ========================== */
     const UI = {
       tabs: [
         {id:'accounts', label:'Accounts'},
-        {id:'add', label:'Add Transaction'},
-        {id:'list', label:'Transactions'},
+        {id:'add', label:'Add'},
+        {id:'list', label:'List'},
         {id:'budgets', label:'Budgets'},
         {id:'loans', label:'Loans'},
         {id:'reports', label:'Reports'},
-        {id:'settings', label:'Settings / Data'}
+        {id:'settings', label:'Settings'}
       ],
       current:'accounts',
       init(){
-        // Theme
         document.documentElement.setAttribute('data-theme', Data.state.settings.theme==='light'?'light':'dark');
-        // Tabs
         const tn = document.getElementById('tabs');
         tn.innerHTML = '';
         const icons = {accounts:'🏦', add:'➕', list:'📄', budgets:'🎯', loans:'🤝', reports:'📊', settings:'⚙️'};
@@ -380,12 +824,10 @@
           tn.appendChild(b);
         });
         UI.render();
-        // Update appbar balance and subtitle
         Accounts.recalcBalances();
         const total = (Data.state.accounts||[]).reduce((s,a)=>s+(a._computed||0),0);
         const tb = document.getElementById('totalBalance'); if(tb) tb.textContent = U.fmtMoney(total);
         const sub = document.getElementById('appSub'); if(sub){ const tabLabel=(UI.tabs.find(x=>x.id===UI.current)||{}).label||'Overview'; sub.textContent = tabLabel; }
-        // Global buttons
         document.getElementById('toggleThemeBtn').onclick = ()=>{ Data.state.settings.theme = Data.state.settings.theme==='light'?'dark':'light'; Data.save(); document.documentElement.setAttribute('data-theme', Data.state.settings.theme); };
         document.getElementById('backupBtn').onclick = UI.exportData;
         document.getElementById('clearBtn').onclick = ()=>{ if(confirm('This removes all data. Continue?')){ Data.reset(); Accounts.recalcBalances(); UI.render(); } };
@@ -405,20 +847,32 @@
       },
       viewAccounts(){
         const wrap = document.createElement('div'); wrap.className='grid two';
-        // Left: Accounts list
         const list = document.createElement('div'); list.className='card';
         const h = document.createElement('div'); h.className='flex-between';
-        h.innerHTML = `<strong>Accounts</strong><span class="subtle">Tap to edit or remove</span>`; list.appendChild(h);
+        h.innerHTML = `<strong style="font-size:17px">Accounts</strong><span class="subtle">Tap to edit or remove</span>`; list.appendChild(h);
         Accounts.recalcBalances();
-        const tbl = document.createElement('table');
-        tbl.innerHTML = `<thead><tr><th>Name</th><th>Type</th><th class="right">Balance</th><th></th></tr></thead><tbody></tbody>`;
-        const tbody = tbl.querySelector('tbody');
+        
+        const accountsList = document.createElement('div'); accountsList.className='list spaced';
         for(const a of Accounts.list()){
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${a.name}</td><td><span class="badge">${a.type}</span></td><td class="right mono">${U.fmtMoney(a._computed, a.currency)}</td><td class="right"><button class="btn ghost" data-id="${a.id}">Edit</button> <button class="btn danger" data-del="${a.id}">Delete</button></td>`;
-          tbody.appendChild(tr);
+          const card = document.createElement('div'); card.className='mobile-table-card';
+          card.innerHTML = `
+            <div class="mobile-table-row">
+              <strong style="font-size:15px">${a.name}</strong>
+              <span class="badge">${a.type}</span>
+            </div>
+            <div class="mobile-table-row" style="margin-top:10px">
+              <span class="mobile-table-label">Balance</span>
+              <span class="mono" style="font-size:16px; font-weight:600">${U.fmtMoney(a._computed, a.currency)}</span>
+            </div>
+            <div style="display:flex; gap:8px; margin-top:12px; padding-top:12px; border-top:1px solid var(--border)">
+              <button class="btn ghost" data-id="${a.id}" style="flex:1; padding:10px; min-height:40px">Edit</button>
+              <button class="btn danger" data-del="${a.id}" style="flex:1; padding:10px; min-height:40px">Delete</button>
+            </div>
+          `;
+          accountsList.appendChild(card);
         }
-        list.appendChild(tbl);
+        list.appendChild(accountsList);
+        
         list.addEventListener('click', (e)=>{
           const id = e.target.getAttribute('data-id');
           if(id){ UI.promptAccountEdit(id); }
@@ -426,11 +880,10 @@
           if(del && confirm('Delete account and related transactions?')){ Accounts.remove(del); UI.render(); }
         });
 
-        // Right: Add account
         const form = document.createElement('div'); form.className='card';
         form.innerHTML = `
-          <strong>Add Account</strong>
-          <div class="grid two spaced">
+          <strong style="font-size:17px">Add Account</strong>
+          <div class="grid spaced">
             <div><label>Name</label><input id="accName" type="text" placeholder="e.g. Cash on hand" /></div>
             <div><label>Type</label>
               <select id="accType">
@@ -440,8 +893,8 @@
             <div><label>Currency</label><input id="accCur" type="text" value="${Data.state.settings.currency}" /></div>
             <div><label>Opening Balance</label><input id="accOpen" type="number" step="0.01" value="0" /></div>
           </div>
-          <div class="spaced"><button class="btn primary" id="accAddBtn">Add</button></div>
-          <div class="hint spaced">Tip: Create a Cash account to track coins. Use the <span class="highlight">Loss</span> transaction type to record missing coins without counting them as expenses.</div>
+          <div class="spaced"><button class="btn primary" id="accAddBtn" style="width:100%">Add Account</button></div>
+          <div class="hint spaced">Tip: Create a Cash account to track coins. Use the Loss transaction type to record missing coins without counting them as expenses.</div>
         `;
         form.querySelector('#accAddBtn').onclick = ()=>{
           const name = form.querySelector('#accName').value.trim(); if(!name) return alert('Enter name');
@@ -464,8 +917,8 @@
         const categoriesOptions = Object.keys(Data.state.categories.expense).map(k=>`<option>${k}</option>`).join('');
         const incomeOptions = Data.state.categories.income.map(k=>`<option>${k}</option>`).join('');
         wrap.innerHTML = `
-          <strong>Add Transaction</strong>
-          <div class="grid three spaced">
+          <strong style="font-size:17px">Add Transaction</strong>
+          <div class="grid spaced">
             <div>
               <label>Type</label>
               <select id="txType">
@@ -483,23 +936,26 @@
             </div>
             <div>
               <label>Amount</label>
-              <div class="inline"><input id="txAmt" type="text" placeholder="e.g. 1200 or 500+200-50" /><button class="btn ghost" onclick="UI.showCalc()">Calc</button></div>
+              <div class="inline" style="width:100%">
+                <input id="txAmt" type="text" placeholder="e.g. 1200 or 500+200-50" style="flex:1; min-width:0" />
+                <button class="btn ghost" onclick="UI.showCalc()" style="padding:12px; min-height:48px">Calc</button>
+              </div>
             </div>
           </div>
 
-          <div id="rowAccount" class="grid two">
+          <div id="rowAccount" class="grid spaced">
             <div><label>Account</label><select id="txAcc">${accountsOptions}</select></div>
             <div><label>Payment method</label>
               <select id="txMethod"><option>Cash</option><option>Card</option><option>Bank transfer</option><option>PayID</option><option>BPAY</option><option>eWallet</option></select>
             </div>
           </div>
 
-          <div id="rowTransfer" class="grid two hidden">
+          <div id="rowTransfer" class="grid spaced hidden">
             <div><label>From</label><select id="txFrom">${accountsOptions}</select></div>
             <div><label>To</label><select id="txTo">${accountsOptions}</select></div>
           </div>
 
-          <div id="rowCategory" class="grid two spaced">
+          <div id="rowCategory" class="grid spaced">
             <div>
               <label>Category</label>
               <select id="txCat">
@@ -510,35 +966,34 @@
             </div>
             <div>
               <label>Subcategory</label>
-              <input id="txSub" type="text" placeholder="e.g. Fuel / Restaurant / Store" />
+              <input id="txSub" type="text" placeholder="e.g. Fuel / Restaurant" />
             </div>
           </div>
 
-          <div class="grid two spaced">
+          <div class="grid spaced">
             <div><label>Vendor / Location</label><input id="txVendor" type="text" placeholder="e.g. Shell Narellan" /></div>
-            <div><label>Brand / Items</label><input id="txBrand" type="text" placeholder="e.g. Coca-Cola 1.5L; Chips" /></div>
+            <div><label>Brand / Items</label><input id="txBrand" type="text" placeholder="e.g. Coca Cola 1.5L" /></div>
           </div>
 
-          <div class="grid two spaced">
-            <div><label>Receipt link (Drive/Photos)</label><input id="txReceipt" type="text" placeholder="https://..." /></div>
+          <div class="grid spaced">
+            <div><label>Receipt link</label><input id="txReceipt" type="text" placeholder="https://..." /></div>
             <div><label>Notes</label><input id="txNotes" type="text" placeholder="Any details" /></div>
           </div>
 
-          <div class="grid two spaced">
+          <div class="grid spaced" style="grid-template-columns:auto auto; justify-content:start; gap:20px">
             <div class="inline"><input id="txTax" type="checkbox" /> <label for="txTax">Tax deductible</label></div>
             <div class="inline"><input id="txRecurring" type="checkbox" /> <label for="txRecurring">Recurring</label></div>
           </div>
 
-          <div class="spaced toolbar">
-            <button class="btn primary" id="txSave">Save</button>
+          <div class="spaced" style="display:flex; flex-direction:column; gap:10px">
+            <button class="btn primary" id="txSave">Save Transaction</button>
             <button class="btn ghost" id="txSaveTemplate">Save as template</button>
             <select id="templatePick"><option value="">Quick templates…</option></select>
-            <button class="btn ghost" id="templateUse">Use</button>
+            <button class="btn ghost" id="templateUse">Use selected template</button>
           </div>
-          <div class="hint spaced">Transfers move money between accounts with one entry. <span class="highlight">Loss</span> deducts from a cash account without counting as spending in category reports. Receipt is a link you paste from your cloud storage.</div>
+          <div class="hint spaced">Transfers move money between accounts with one entry. Loss deducts from a cash account without counting as spending in category reports.</div>
         `;
 
-        // Populate templates
         const tp = wrap.querySelector('#templatePick');
         Data.state.templates.forEach(t=>{ const opt=document.createElement('option'); opt.value=t.id; opt.textContent=t.name; tp.appendChild(opt); });
 
@@ -622,21 +1077,29 @@
         const catOpts = ['<option value="">All categories</option>','Loss',...Object.keys(Data.state.categories.expense),...Data.state.categories.income].map(k=>`<option>${k}</option>`).join('');
         wrap.innerHTML = `
           <div class="flex-between">
-            <strong>Transactions</strong>
-            <div class="inline">
-              <input id="q" type="text" placeholder="Search vendor or notes" />
-              <select id="fAcc">${accOpts}</select>
-              <select id="fCat">${catOpts}</select>
-              <input id="fFrom" type="date" />
-              <input id="fTo" type="date" />
-              <input id="fMin" type="number" step="0.01" placeholder="Min" style="width:90px"/>
-              <input id="fMax" type="number" step="0.01" placeholder="Max" style="width:90px"/>
-              <label class="inline"><input id="fTax" type="checkbox"/> <span class="hint">Tax only</span></label>
-              <button class="btn ghost" id="fReset">Reset</button>
+            <strong style="font-size:17px">Transactions</strong>
+          </div>
+          <div class="grid spaced">
+            <input id="q" type="text" placeholder="Search vendor or notes" />
+            <select id="fAcc">${accOpts}</select>
+            <select id="fCat">${catOpts}</select>
+            <div class="grid two" style="gap:10px">
+              <input id="fFrom" type="date" placeholder="From" />
+              <input id="fTo" type="date" placeholder="To" />
             </div>
+            <div class="grid two" style="gap:10px">
+              <input id="fMin" type="number" step="0.01" placeholder="Min amount" />
+              <input id="fMax" type="number" step="0.01" placeholder="Max amount" />
+            </div>
+            <div class="inline">
+              <input id="fTax" type="checkbox"/>
+              <label for="fTax">Tax only</label>
+            </div>
+            <button class="btn ghost" id="fReset">Reset filters</button>
           </div>
           <div class="list spaced" id="txList"></div>
         `;
+        
         const renderRows = ()=>{
           const q = wrap.querySelector('#q').value.toLowerCase();
           const acc = wrap.querySelector('#fAcc').value;
@@ -659,48 +1122,74 @@
           }).sort((a,b)=>b.ts-a.ts);
 
           const list = wrap.querySelector('#txList'); list.innerHTML='';
+          
+          if(out.length === 0){
+            list.innerHTML = '<div class="hint" style="text-align:center; padding:20px">No transactions found</div>';
+            return;
+          }
+          
           for(const t of out){
-            const line = document.createElement('div'); line.className='touch-reveal shadow-sm';
             const typeClass = `type-${t.type.replace('loan-','loan')}`;
             const accName = t.accountId ? (Accounts.get(t.accountId)?.name||'') : `${Accounts.get(t.fromId)?.name||''} → ${Accounts.get(t.toId)?.name||''}`;
             const cat = t.type==='transfer' ? 'Internal' : (t.type==='loss' ? 'Loss' : (t.category||''));
-            line.innerHTML = `
-              <div class="card">
-                <div class="flex-between">
-                  <div class="inline" style="gap:12px">
+            
+            const card = document.createElement('div'); card.className='transaction-card';
+            card.innerHTML = `
+              <div class="transaction-header">
+                <div style="flex:1; min-width:0">
+                  <div class="inline" style="margin-bottom:6px">
                     <span class="pill ${typeClass}">${t.type}</span>
-                    <strong>${accName}</strong>
-                    <span class="subtle">${new Date(t.ts).toLocaleString()}</span>
                   </div>
-                  <div class="right mono" style="min-width:140px">${U.fmtMoney(t.type==='income'||t.type==='loan-received'? t.amount : -t.amount)}</div>
+                  <div style="font-weight:600; font-size:15px">${accName}</div>
+                  <div class="transaction-meta">${new Date(t.ts).toLocaleString()}</div>
                 </div>
-                <div class="inline" style="gap:12px; margin-top:6px">
-                  ${cat?`<span class="badge">${cat}${t.subcategory?(' • '+t.subcategory):''}</span>`:''}
-                  ${t.vendor?`<span class="badge">${t.vendor}</span>`:''}
-                  ${t.method?`<span class="badge">${t.method}</span>`:''}
-                  ${t.tax?`<span class="badge">Tax</span>`:''}
-                  ${t.receiptUrl?`<a class="badge" href="${t.receiptUrl}" target="_blank" rel="noopener">Receipt</a>`:''}
-                </div>
-                ${t.notes?`<div class="hint" style="margin-top:6px">${t.notes}</div>`:''}
-                <div class="reveal-actions">
-                  <button class="btn ghost" data-edit="${t.id}">Edit</button>
-                  <button class="btn danger" data-del="${t.id}">Delete</button>
-                </div>
-              </div>`;
-            // swipe handling
-            let startX=null; line.addEventListener('touchstart',e=>{ startX=e.touches[0].clientX; });
-            line.addEventListener('touchmove',e=>{ if(startX==null) return; const dx=e.touches[0].clientX-startX; if(dx<-40){ line.querySelector('.reveal-actions').style.opacity=1; line.querySelector('.reveal-actions').style.pointerEvents='auto'; } });
-            line.addEventListener('touchend',()=>{ startX=null; });
+                <div class="transaction-amount mono">${U.fmtMoney(t.type==='income'||t.type==='loan-received'? t.amount : -t.amount)}</div>
+              </div>
+              <div class="transaction-details">
+                ${cat?`<span class="badge">${cat}${t.subcategory?(' • '+t.subcategory):''}</span>`:''}
+                ${t.vendor?`<span class="badge">${t.vendor}</span>`:''}
+                ${t.method?`<span class="badge">${t.method}</span>`:''}
+                ${t.tax?`<span class="badge">Tax</span>`:''}
+                ${t.receiptUrl?`<a class="badge" href="${t.receiptUrl}" target="_blank" rel="noopener">Receipt</a>`:''}
+              </div>
+              ${t.notes?`<div class="hint" style="margin-top:10px">${t.notes}</div>`:''}
+              <div class="transaction-actions">
+                <button class="btn ghost" data-edit="${t.id}">Edit</button>
+                <button class="btn danger" data-del="${t.id}">Delete</button>
+              </div>
+            `;
 
-            line.addEventListener('click', (e)=>{
-              const id = e.target.getAttribute('data-del'); if(id && confirm('Delete this transaction?')){ Tx.remove(id); renderRows(); return; }
-              const ed = e.target.getAttribute('data-edit'); if(ed){ UI.editTransaction(ed, renderRows); }
+            card.addEventListener('click', (e)=>{
+              const id = e.target.getAttribute('data-del'); 
+              if(id && confirm('Delete this transaction?')){ 
+                Tx.remove(id); 
+                renderRows(); 
+                return; 
+              }
+              const ed = e.target.getAttribute('data-edit'); 
+              if(ed){ 
+                UI.editTransaction(ed, renderRows); 
+              }
             });
-            list.appendChild(line);
+            
+            list.appendChild(card);
           }
         };
-        wrap.querySelector('#fReset').onclick = ()=>{ wrap.querySelector('#q').value=''; ['#fAcc','#fCat','#fFrom','#fTo','#fMin','#fMax','#fTax'].forEach(sel=>{ const el=wrap.querySelector(sel); if(el.type==='checkbox') el.checked=false; else el.value=''; }); renderRows(); };
-        wrap.addEventListener('input', (e)=>{ if(['q','fAcc','fCat','fFrom','fTo','fMin','fMax','fTax'].includes(e.target.id)) renderRows(); });
+        
+        wrap.querySelector('#fReset').onclick = ()=>{ 
+          wrap.querySelector('#q').value=''; 
+          ['#fAcc','#fCat','#fFrom','#fTo','#fMin','#fMax','#fTax'].forEach(sel=>{ 
+            const el=wrap.querySelector(sel); 
+            if(el.type==='checkbox') el.checked=false; 
+            else el.value=''; 
+          }); 
+          renderRows(); 
+        };
+        
+        wrap.addEventListener('input', (e)=>{ 
+          if(['q','fAcc','fCat','fFrom','fTo','fMin','fMax','fTax'].includes(e.target.id)) renderRows(); 
+        });
+        
         renderRows();
         return wrap;
       },
@@ -712,24 +1201,40 @@
       },
       viewBudgets(){
         const wrap = document.createElement('div'); wrap.className='grid two';
-        const left = document.createElement('div'); left.className='card'; left.innerHTML = `<strong>Budgets</strong><div class="hint spaced">Set monthly limits per category. We include <span class="highlight">Loss</span> in spending.</div>`;
+        const left = document.createElement('div'); left.className='card'; 
+        left.innerHTML = `<strong style="font-size:17px">Budgets</strong><div class="hint spaced">Set monthly limits per category. We include Loss in spending.</div>`;
         const month = UI.monthPicker(); left.appendChild(month);
-        const form = document.createElement('div'); form.className='grid two spaced';
+        const form = document.createElement('div'); form.className='grid spaced';
         const cats = ['Loss', ...Object.keys(Data.state.categories.expense)];
-        form.innerHTML = `<div><label>Category</label><select id="bCat">${cats.map(c=>`<option>${c}</option>`).join('')}</select></div>
-        <div><label>Amount</label><input id="bAmt" type="number" step="0.01" /></div>
-        <div class="inline"><input id="bRoll" type="checkbox" /> <label for="bRoll">Rollover unused</label></div>
-        <div><button class="btn primary" id="bSet">Save budget</button></div>`;
+        form.innerHTML = `
+          <div><label>Category</label><select id="bCat">${cats.map(c=>`<option>${c}</option>`).join('')}</select></div>
+          <div><label>Amount</label><input id="bAmt" type="number" step="0.01" /></div>
+          <div class="inline"><input id="bRoll" type="checkbox" /> <label for="bRoll">Rollover unused</label></div>
+          <div><button class="btn primary" id="bSet" style="width:100%">Save budget</button></div>
+        `;
         left.appendChild(form);
-        left.querySelector('#bSet').onclick = ()=>{ const m=month.value; const c=left.querySelector('#bCat').value; const a=parseFloat(left.querySelector('#bAmt').value)||0; const r=left.querySelector('#bRoll').checked; Budgets.set(m,c,a,r); UI.render(); };
+        left.querySelector('#bSet').onclick = ()=>{ 
+          const m=month.value; 
+          const c=left.querySelector('#bCat').value; 
+          const a=parseFloat(left.querySelector('#bAmt').value)||0; 
+          const r=left.querySelector('#bRoll').checked; 
+          Budgets.set(m,c,a,r); 
+          UI.render(); 
+        };
 
-        const right = document.createElement('div'); right.className='card'; right.innerHTML = `<strong>Progress</strong><div id="bList" class="spaced"></div>`;
+        const right = document.createElement('div'); right.className='card'; 
+        right.innerHTML = `<strong style="font-size:17px">Progress</strong><div id="bList" class="spaced"></div>`;
         const render = ()=>{
           const m = month.value; const prog = Budgets.progress(m); const cont = right.querySelector('#bList'); cont.innerHTML='';
           Object.entries(prog).forEach(([cat, v])=>{
             const row = document.createElement('div'); row.className='spaced';
-            row.innerHTML = `<div class="flex-between"><div>${cat}</div><div class="mono">${U.fmtMoney(v.spent)} / ${U.fmtMoney(v.budget)}</div></div>
-            <div class="progress"><div style="width:${Math.min(100,v.pct)}%"></div></div>`;
+            row.innerHTML = `
+              <div class="flex-between" style="margin-bottom:6px">
+                <div style="font-weight:600">${cat}</div>
+                <div class="mono" style="font-size:14px">${U.fmtMoney(v.spent)} / ${U.fmtMoney(v.budget)}</div>
+              </div>
+              <div class="progress"><div style="width:${Math.min(100,v.pct)}%"></div></div>
+            `;
             cont.appendChild(row);
           });
         };
@@ -739,8 +1244,9 @@
       },
       viewLoans(){
         const wrap = document.createElement('div'); wrap.className='grid two';
-        const left = document.createElement('div'); left.className='card'; left.innerHTML=`<strong>Lending Tracker</strong>
-          <div class="grid two spaced">
+        const left = document.createElement('div'); left.className='card'; 
+        left.innerHTML=`<strong style="font-size:17px">Lending Tracker</strong>
+          <div class="grid spaced">
             <div><label>Person</label><input id="lPerson" type="text" placeholder="Name"/></div>
             <div><label>Principal</label><input id="lPrin" type="number" step="0.01" /></div>
             <div><label>Date</label><input id="lDate" type="date" value="${U.nowLocal().slice(0,10)}" /></div>
@@ -748,27 +1254,65 @@
             <div><label>Purpose</label><input id="lPurpose" type="text" /></div>
             <div><label>Expected return</label><input id="lExp" type="date" /></div>
           </div>
-          <div class="spaced"><button class="btn primary" id="lAdd">Add Loan</button></div>
+          <div class="spaced"><button class="btn primary" id="lAdd" style="width:100%">Add Loan</button></div>
           <div class="hint spaced">Use Repayment (received) in Add Transaction to record cash coming back and link to an account.</div>`;
         left.querySelector('#lAdd').onclick = ()=>{
           const person=left.querySelector('#lPerson').value.trim(); if(!person) return alert('Person required');
-          Loans.add({person, principal:parseFloat(left.querySelector('#lPrin').value)||0, date:left.querySelector('#lDate').value, method:left.querySelector('#lMethod').value, purpose:left.querySelector('#lPurpose').value.trim(), expDate:left.querySelector('#lExp').value}); UI.render();
+          Loans.add({
+            person, 
+            principal:parseFloat(left.querySelector('#lPrin').value)||0, 
+            date:left.querySelector('#lDate').value, 
+            method:left.querySelector('#lMethod').value, 
+            purpose:left.querySelector('#lPurpose').value.trim(), 
+            expDate:left.querySelector('#lExp').value
+          }); 
+          UI.render();
         };
 
         const right = document.createElement('div'); right.className='card';
-        right.innerHTML = `<strong>People Owing</strong><div class="spaced" id="loanList"></div>`;
+        right.innerHTML = `<strong style="font-size:17px">People Owing</strong><div class="spaced" id="loanList"></div>`;
         const render = ()=>{
           const cont = right.querySelector('#loanList'); cont.innerHTML='';
-          for(const l of Loans.list()){
-            const div = document.createElement('div'); div.className='card'; div.style.marginBottom='8px';
-            div.innerHTML = `<div class="flex-between"><strong>${l.person}</strong><span class="mono">Outstanding: ${U.fmtMoney(l.outstanding)}</span></div>
+          const loans = Loans.list();
+          
+          if(loans.length === 0){
+            cont.innerHTML = '<div class="hint" style="text-align:center; padding:20px">No loans recorded</div>';
+            return;
+          }
+          
+          for(const l of loans){
+            const div = document.createElement('div'); div.className='card'; div.style.marginBottom='12px';
+            div.innerHTML = `
+              <div class="flex-between" style="margin-bottom:8px">
+                <strong style="font-size:15px">${l.person}</strong>
+                <span class="mono" style="font-weight:600">${U.fmtMoney(l.outstanding)}</span>
+              </div>
               <div class="hint">Principal ${U.fmtMoney(l.principal)} • ${l.method}${l.purpose?(' • '+l.purpose):''} • Status ${l.status}</div>
-              <div class="toolbar spaced"><button class="btn ghost" data-repay="${l.id}">Record repayment</button><button class="btn warn" data-writeoff="${l.id}">Write off</button></div>`;
+              <div style="display:flex; gap:8px; margin-top:12px">
+                <button class="btn ghost" data-repay="${l.id}" style="flex:1; padding:10px; min-height:40px">Record repayment</button>
+                <button class="btn warn" data-writeoff="${l.id}" style="flex:1; padding:10px; min-height:40px">Write off</button>
+              </div>
+            `;
             div.addEventListener('click', (e)=>{
-              const id=e.target.getAttribute('data-repay'); if(id){
-                const amt = prompt('Amount received'); if(amt){ const accountId = (Accounts.list()[0]||{}).id; Loans.receive(id,{amount:parseFloat(amt)||0, accountId, method:'Cash', notes:'Repayment received'}); UI.render(); }
+              const id=e.target.getAttribute('data-repay'); 
+              if(id){
+                const amt = prompt('Amount received'); 
+                if(amt){ 
+                  const accountId = (Accounts.list()[0]||{}).id; 
+                  Loans.receive(id,{
+                    amount:parseFloat(amt)||0, 
+                    accountId, 
+                    method:'Cash', 
+                    notes:'Repayment received'
+                  }); 
+                  UI.render(); 
+                }
               }
-              const w=e.target.getAttribute('data-writeoff'); if(w && confirm('Mark as forgiven?')){ Loans.writeOff(w); UI.render(); }
+              const w=e.target.getAttribute('data-writeoff'); 
+              if(w && confirm('Mark as forgiven?')){ 
+                Loans.writeOff(w); 
+                UI.render(); 
+              }
             });
             cont.appendChild(div);
           }
@@ -779,28 +1323,32 @@
       },
       viewReports(){
         const wrap = document.createElement('div'); wrap.className='grid two';
-        const left = document.createElement('div'); left.className='card'; left.innerHTML = `<strong>Overview</strong>`;
+        const left = document.createElement('div'); left.className='card'; 
+        left.innerHTML = `<strong style="font-size:17px">Overview</strong>`;
         const kpi = document.createElement('div'); kpi.className='kpi spaced';
         const month = UI.monthPicker(); left.appendChild(month); left.appendChild(kpi);
-        const canv1 = document.createElement('canvas'); canv1.height=280; left.appendChild(canv1);
+        const canv1 = document.createElement('canvas'); canv1.height=240; left.appendChild(canv1);
 
-        const right = document.createElement('div'); right.className='card'; right.innerHTML = `<strong>Monthly Trend</strong>`;
-        const canv2 = document.createElement('canvas'); canv2.height=280; right.appendChild(canv2);
+        const right = document.createElement('div'); right.className='card'; 
+        right.innerHTML = `<strong style="font-size:17px">Monthly Trend</strong>`;
+        const canv2 = document.createElement('canvas'); canv2.height=240; right.appendChild(canv2);
 
         const render = ()=>{
-          // KPIs
           const m = month.value; const map = Reports.categorySpend(m);
           const totalSpend = U.sum(Object.values(map));
           const income = U.sum(Tx.filter(t=>t.type==='income' && U.monthKey(t.ts)===m), t=>t.amount) + U.sum(Tx.filter(t=>t.type==='loan-received' && U.monthKey(t.ts)===m), t=>t.amount);
           const net = income - totalSpend;
           kpi.innerHTML = '';
-          const box = (label, value)=>{ const d=document.createElement('div'); d.className='card'; d.innerHTML=`<div class="subtle">${label}</div><div class="mono" style="font-size:18px; margin-top:6px">${U.fmtMoney(value)}</div>`; return d; };
+          const box = (label, value)=>{ 
+            const d=document.createElement('div'); 
+            d.className='card'; 
+            d.innerHTML=`<div class="subtle">${label}</div><div class="mono" style="font-size:17px; margin-top:6px; font-weight:600">${U.fmtMoney(value)}</div>`; 
+            return d; 
+          };
           kpi.appendChild(box('Income', income));
-          kpi.appendChild(box('Spend (incl. Loss)', totalSpend));
+          kpi.appendChild(box('Spend', totalSpend));
 
-          // Pie for category spend
           UI.drawPie(canv1, map);
-          // Trend
           UI.drawTrend(canv2, Reports.trendMonthly(6));
         };
         month.addEventListener('change', render); render();
@@ -810,22 +1358,29 @@
       viewSettings(){
         const wrap = document.createElement('div'); wrap.className='grid two';
         const left = document.createElement('div'); left.className='card';
-        left.innerHTML = `<strong>Settings</strong>
-          <div class="grid two spaced">
+        left.innerHTML = `<strong style="font-size:17px">Settings</strong>
+          <div class="grid spaced">
             <div><label>Default currency</label><input id="sCur" type="text" value="${Data.state.settings.currency}" /></div>
             <div><label>Theme</label><select id="sTheme"><option value="dark">Dark</option><option value="light">Light</option></select></div>
           </div>
-          <div class="spaced"><button class="btn primary" id="sSave">Save</button></div>
-          <div class="notice spaced">Security: Designed for local use. For extra protection on Samsung, store this file inside <span class="highlight">Secure Folder</span>. No cloud sync. No external connections.</div>`;
+          <div class="spaced"><button class="btn primary" id="sSave" style="width:100%">Save Settings</button></div>
+          <div class="notice spaced">Security: Designed for local use. For extra protection on Samsung, store this file inside Secure Folder. No cloud sync. No external connections.</div>`;
         left.querySelector('#sTheme').value = Data.state.settings.theme;
-        left.querySelector('#sSave').onclick = ()=>{ Data.state.settings.currency = left.querySelector('#sCur').value.trim()||defaultCurrency; Data.state.settings.theme=left.querySelector('#sTheme').value; Data.save(); UI.init(); };
+        left.querySelector('#sSave').onclick = ()=>{ 
+          Data.state.settings.currency = left.querySelector('#sCur').value.trim()||defaultCurrency; 
+          Data.state.settings.theme=left.querySelector('#sTheme').value; 
+          Data.save(); 
+          UI.init(); 
+        };
 
         const right = document.createElement('div'); right.className='card';
-        right.innerHTML = `<strong>Data</strong>
-          <div class="toolbar spaced">
+        right.innerHTML = `<strong style="font-size:17px">Data</strong>
+          <div style="display:flex; flex-direction:column; gap:10px; margin-top:16px">
             <button class="btn warn" id="dExport">Export JSON</button>
             <button class="btn ghost" id="dExportCsv">Export CSV</button>
-            <label class="btn ghost" for="dImport">Import JSON/CSV<input id="dImport" type="file" accept=".json,.csv" style="display:none"/></label>
+            <label class="btn ghost" for="dImport" style="text-align:center">Import JSON/CSV
+              <input id="dImport" type="file" accept=".json,.csv" style="display:none"/>
+            </label>
           </div>
           <div class="hint spaced">CSV import expects columns: type,ts,amount,accountId,fromId,toId,category,subcategory,vendor,brand,method,notes,receiptUrl,tax,recurring</div>`;
         right.querySelector('#dExport').onclick = UI.exportData;
@@ -836,70 +1391,170 @@
       },
       monthPicker(){
         const sel = document.createElement('select'); sel.className='spaced';
-        // build last 18 months
         const now = new Date(); const list=[];
-        for(let i=0;i<18;i++){ const d=new Date(now.getFullYear(), now.getMonth()-i, 1); const val=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; list.push(val); }
+        for(let i=0;i<18;i++){ 
+          const d=new Date(now.getFullYear(), now.getMonth()-i, 1); 
+          const val=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; 
+          list.push(val); 
+        }
         sel.innerHTML = list.map(v=>`<option value="${v}">${v}</option>`).join('');
         return sel;
       },
       exportData(){
         const blob = new Blob([JSON.stringify(Data.state, null, 2)], {type:'application/json'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'finance-tracker-backup.json'; a.click(); URL.revokeObjectURL(a.href);
+        const a = document.createElement('a'); 
+        a.href = URL.createObjectURL(blob); 
+        a.download = 'finance-tracker-backup.json'; 
+        a.click(); 
+        URL.revokeObjectURL(a.href);
       },
       exportCSV(rows){
         const keys = ['id','type','ts','amount','accountId','fromId','toId','category','subcategory','vendor','brand','method','notes','receiptUrl','tax','recurring'];
         const csv = [keys.join(',')].concat(rows.map(r=>keys.map(k=>JSON.stringify(r[k]??'')).join(','))).join('\n');
-        const blob = new Blob([csv], {type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='transactions.csv'; a.click(); URL.revokeObjectURL(a.href);
+        const blob = new Blob([csv], {type:'text/csv'}); 
+        const a=document.createElement('a'); 
+        a.href=URL.createObjectURL(blob); 
+        a.download='transactions.csv'; 
+        a.click(); 
+        URL.revokeObjectURL(a.href);
       },
       importData(e){
         const file = e.target.files[0]; if(!file) return;
-        const reader = new FileReader(); reader.onload = ()=>{
+        const reader = new FileReader(); 
+        reader.onload = ()=>{
           try{
             if(file.name.endsWith('.json')){
-              const state = JSON.parse(reader.result); if(!state || !state.accounts) throw new Error('Invalid JSON');
-              Data.state = state; Data.save(); UI.init();
+              const state = JSON.parse(reader.result); 
+              if(!state || !state.accounts) throw new Error('Invalid JSON');
+              Data.state = state; 
+              Data.save(); 
+              UI.init();
             } else if(file.name.endsWith('.csv')){
-              const lines = reader.result.split(/\r?\n/).filter(Boolean); const headers = lines.shift().split(',').map(h=>h.replace(/^"|"$/g,''));
-              for(const line of lines){ const parts = line.match(/\"[^\"]*\"|[^,]+/g).map(s=>s.replace(/^"|"$/g,'')); const obj={}; headers.forEach((h,i)=>obj[h]=parts[i]); obj.amount=parseFloat(obj.amount)||0; obj.ts=Number(obj.ts)||Date.now(); obj.tax = String(obj.tax).toLowerCase()==='true'; obj.recurring=String(obj.recurring).toLowerCase()==='true'; Tx.add(obj); }
+              const lines = reader.result.split(/\r?\n/).filter(Boolean); 
+              const headers = lines.shift().split(',').map(h=>h.replace(/^"|"$/g,''));
+              for(const line of lines){ 
+                const parts = line.match(/\"[^\"]*\"|[^,]+/g).map(s=>s.replace(/^"|"$/g,'')); 
+                const obj={}; 
+                headers.forEach((h,i)=>obj[h]=parts[i]); 
+                obj.amount=parseFloat(obj.amount)||0; 
+                obj.ts=Number(obj.ts)||Date.now(); 
+                obj.tax = String(obj.tax).toLowerCase()==='true'; 
+                obj.recurring=String(obj.recurring).toLowerCase()==='true'; 
+                Tx.add(obj); 
+              }
               UI.init();
             }
-          }catch(err){ alert('Import failed: '+err.message); }
+          }catch(err){ 
+            alert('Import failed: '+err.message); 
+          }
         };
         reader.readAsText(file);
       },
-      showCalc(){ document.getElementById('calcModal').classList.remove('hidden'); document.getElementById('calcInput').value=''; document.getElementById('calcInput').focus(); },
-      hideCalc(){ document.getElementById('calcModal').classList.add('hidden'); },
-      calcInsert(s){ const inp=document.getElementById('calcInput'); const {selectionStart, selectionEnd, value}=inp; inp.value=value.slice(0,selectionStart)+s+value.slice(selectionEnd); inp.focus(); inp.selectionStart=inp.selectionEnd=selectionStart+String(s).length; },
-      calcClear(){ document.getElementById('calcInput').value=''; },
-      calcEval(){ const v=U.parseAmount(document.getElementById('calcInput').value); if(!(v>0)) return alert('Invalid'); const amtInput = document.getElementById('txAmt'); amtInput.value = v.toFixed(2); UI.hideCalc(); },
+      showCalc(){ 
+        document.getElementById('calcModal').classList.remove('hidden'); 
+        document.getElementById('calcInput').value=''; 
+        document.getElementById('calcInput').focus(); 
+      },
+      hideCalc(){ 
+        document.getElementById('calcModal').classList.add('hidden'); 
+      },
+      calcInsert(s){ 
+        const inp=document.getElementById('calcInput'); 
+        const {selectionStart, selectionEnd, value}=inp; 
+        inp.value=value.slice(0,selectionStart)+s+value.slice(selectionEnd); 
+        inp.focus(); 
+        inp.selectionStart=inp.selectionEnd=selectionStart+String(s).length; 
+      },
+      calcClear(){ 
+        document.getElementById('calcInput').value=''; 
+      },
+      calcEval(){ 
+        const v=U.parseAmount(document.getElementById('calcInput').value); 
+        if(!(v>0)) return alert('Invalid'); 
+        const amtInput = document.getElementById('txAmt'); 
+        amtInput.value = v.toFixed(2); 
+        UI.hideCalc(); 
+      },
       drawPie(canvas, map){
-        const ctx = canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width,canvas.height);
-        const total = U.sum(Object.values(map)); if(total<=0){ ctx.fillStyle = '#888'; ctx.fillText('No spending this month', 12, 24); return; }
-        // simple palette
+        const ctx = canvas.getContext('2d'); 
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        const total = U.sum(Object.values(map)); 
+        if(total<=0){ 
+          ctx.fillStyle = '#888'; 
+          ctx.font = '14px system-ui'; 
+          ctx.fillText('No spending this month', 12, 30); 
+          return; 
+        }
         const colors = ['#6aa0ff','#7bd389','#ffb86b','#ff6b6b','#b794f4','#63e6be','#ffc078','#94d2ff','#ffd6a5','#caffbf'];
         const entries = Object.entries(map);
-        let start=0; const cx=canvas.width/2, cy=canvas.height/2, r=Math.min(cx,cy)-10;
+        let start=0; 
+        const cx=canvas.width/2, cy=canvas.height/2, r=Math.min(cx,cy)-40;
         entries.forEach(([k,v],i)=>{
-          const a = (v/total)*Math.PI*2; ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,start,start+a); ctx.closePath(); ctx.fillStyle = colors[i%colors.length]; ctx.fill(); start+=a; });
-        // legend
-        ctx.font = '12px system-ui, sans-serif'; ctx.fillStyle = '#cbd5e1'; let y=16; entries.forEach(([k,v],i)=>{ ctx.fillStyle=colors[i%colors.length]; ctx.fillRect(12,y-10,8,8); ctx.fillStyle='#cbd5e1'; ctx.fillText(`${k}: ${U.fmtMoney(v)}`, 26, y); y+=18; });
+          const a = (v/total)*Math.PI*2; 
+          ctx.beginPath(); 
+          ctx.moveTo(cx,cy); 
+          ctx.arc(cx,cy,r,start,start+a); 
+          ctx.closePath(); 
+          ctx.fillStyle = colors[i%colors.length]; 
+          ctx.fill(); 
+          start+=a; 
+        });
+        ctx.font = '12px system-ui'; 
+        ctx.fillStyle = '#cbd5e1'; 
+        let y=20; 
+        entries.forEach(([k,v],i)=>{ 
+          ctx.fillStyle=colors[i%colors.length]; 
+          ctx.fillRect(12,y-10,10,10); 
+          ctx.fillStyle='#cbd5e1'; 
+          ctx.fillText(`${k}: ${U.fmtMoney(v)}`, 28, y); 
+          y+=18; 
+        });
       },
       drawTrend(canvas, rows){
-        const ctx = canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width,canvas.height);
-        if(rows.length===0){ ctx.fillStyle='#888'; ctx.fillText('No data', 12, 24); return; }
-        // axes
-        const pad=36; const w=canvas.width, h=canvas.height; ctx.strokeStyle='#334155'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(pad, h-pad); ctx.lineTo(w-12, h-pad); ctx.lineTo(w-12, 12); ctx.stroke();
-        const max = Math.max(...rows.map(r=>Math.max(r.income, r.expense, Math.abs(r.net)))); const scale = (h-2*pad)/ (max||1);
+        const ctx = canvas.getContext('2d'); 
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        if(rows.length===0){ 
+          ctx.fillStyle='#888'; 
+          ctx.font = '14px system-ui';
+          ctx.fillText('No data', 12, 30); 
+          return; 
+        }
+        const pad=40; 
+        const w=canvas.width, h=canvas.height; 
+        ctx.strokeStyle='#334155'; 
+        ctx.lineWidth=1; 
+        ctx.beginPath(); 
+        ctx.moveTo(pad, h-pad); 
+        ctx.lineTo(w-12, h-pad); 
+        ctx.lineTo(w-12, 12); 
+        ctx.stroke();
+        const max = Math.max(...rows.map(r=>Math.max(r.income, r.expense, Math.abs(r.net)))); 
+        const scale = (h-2*pad)/ (max||1);
         const step = (w- pad - 24)/Math.max(1,(rows.length-1));
-        const drawLine = (key, color)=>{ ctx.beginPath(); rows.forEach((r,i)=>{ const x=pad+i*step; const y=h-pad-(r[key]*scale); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); }); ctx.strokeStyle=color; ctx.lineWidth=2; ctx.stroke(); };
-        drawLine('income','#7bd389'); drawLine('expense','#ff6b6b'); drawLine('net','#6aa0ff');
-        ctx.fillStyle='#cbd5e1'; ctx.font='12px system-ui'; rows.forEach((r,i)=>{ const x=pad+i*step; ctx.fillText(r.month, x-14, h-8); });
+        const drawLine = (key, color)=>{ 
+          ctx.beginPath(); 
+          rows.forEach((r,i)=>{ 
+            const x=pad+i*step; 
+            const y=h-pad-(r[key]*scale); 
+            if(i===0) ctx.moveTo(x,y); 
+            else ctx.lineTo(x,y); 
+          }); 
+          ctx.strokeStyle=color; 
+          ctx.lineWidth=2; 
+          ctx.stroke(); 
+        };
+        drawLine('income','#7bd389'); 
+        drawLine('expense','#ff6b6b'); 
+        drawLine('net','#6aa0ff');
+        ctx.fillStyle='#cbd5e1'; 
+        ctx.font='11px system-ui'; 
+        rows.forEach((r,i)=>{ 
+          const x=pad+i*step; 
+          ctx.fillText(r.month, x-18, h-8); 
+        });
       }
     };
 
-    /* ==========================
-       Demo Data
-       ========================== */
     const Demo = {
       load(){
         if(!confirm('Add demo data? This appends to your current data.')) return;
@@ -922,26 +1577,32 @@
       }
     };
 
-    // init
     UI.init();
 
-    /* ==========================
-       PWA install prompt + SW registration
-       ========================== */
     let _deferredPrompt = null;
     window.addEventListener('beforeinstallprompt', (e)=>{
       e.preventDefault();
       _deferredPrompt = e;
-      const btn = document.getElementById('installBtn'); if(btn) btn.classList.remove('hidden');
+      const btn = document.getElementById('installBtn'); 
+      if(btn) btn.classList.remove('hidden');
     });
+    
     const installBtn = document.getElementById('installBtn');
-    if(installBtn){ installBtn.addEventListener('click', async ()=>{
-      if(_deferredPrompt){ _deferredPrompt.prompt(); await _deferredPrompt.userChoice; _deferredPrompt=null; installBtn.classList.add('hidden'); }
-      else { alert('On Android Chrome use the menu ••• then "Install app" or "Add to Home screen".'); }
-    }); }
+    if(installBtn){ 
+      installBtn.addEventListener('click', async ()=>{
+        if(_deferredPrompt){ 
+          _deferredPrompt.prompt(); 
+          await _deferredPrompt.userChoice; 
+          _deferredPrompt=null; 
+          installBtn.classList.add('hidden'); 
+        } else { 
+          alert('On Android Chrome use the menu then "Install app" or "Add to Home screen".'); 
+        }
+      }); 
+    }
 
     if('serviceWorker' in navigator){
-      navigator.serviceWorker.register('./sw.js').catch(()=>{/* ignored if file not present yet */});
+      navigator.serviceWorker.register('./sw.js').catch(()=>{});
     }
   </script>
 </body>
