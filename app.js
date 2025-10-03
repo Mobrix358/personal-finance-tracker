@@ -18,6 +18,7 @@ let data = {
             'Personal Care',
             'Education',
             'Travel',
+            'Transfer Fees',
             'Other'
         ]
     },
@@ -29,20 +30,23 @@ let data = {
         'Bills & Utilities': ['Electricity', 'Gas', 'Water', 'Internet', 'Mobile', 'Streaming'],
         'Housing': ['Rent', 'Mortgage', 'Repairs', 'Furniture', 'Maintenance'],
         'Health': ['Doctor', 'Pharmacy', 'Gym', 'Supplements', 'Insurance'],
-        'Loans & Installments': ['Personal Loan', 'Car Loan', 'Credit Card', 'Buy Now Pay Later', 'Appliances'],
+        'Loans & Installments': ['Personal Loan', 'Car Loan', 'Credit Card Payment', 'Buy Now Pay Later', 'Appliances'],
         'Pets': ['Pet Food', 'Veterinary', 'Medication', 'Grooming', 'Supplies', 'Insurance', 'Boarding'],
         'Entertainment': ['Movies', 'Games', 'Concerts', 'Sports', 'Hobbies'],
         'Personal Care': ['Haircut', 'Spa', 'Beauty Products', 'Clothing Care'],
         'Education': ['Tuition', 'Books', 'Courses', 'Supplies'],
         'Travel': ['Flights', 'Accommodation', 'Activities', 'Transport'],
+        'Transfer Fees': ['Bank Transfer', 'Wire Transfer', 'Online Transfer'],
         'Other': ['Miscellaneous']
     },
     debts: [],
     budgets: [],
-    templates: []
+    templates: [],
+    billingCycleDay: 1
 };
 
 let deferredPrompt;
+let editingAccountId = null;
 
 // Initialize
 function init() {
@@ -58,6 +62,8 @@ function loadData() {
     const saved = localStorage.getItem('financeTrackerData');
     if (saved) {
         data = JSON.parse(saved);
+        // Add billing cycle day if not exists
+        if (!data.billingCycleDay) data.billingCycleDay = 1;
     }
 }
 
@@ -66,7 +72,6 @@ function saveData() {
 }
 
 function setupEventListeners() {
-    // Tab switching
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const tab = btn.dataset.tab;
@@ -74,7 +79,6 @@ function setupEventListeners() {
         });
     });
 
-    // Filter chips
     document.querySelectorAll('.filter-chip').forEach(chip => {
         chip.addEventListener('click', () => {
             document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
@@ -83,12 +87,10 @@ function setupEventListeners() {
         });
     });
 
-    // Search
     document.getElementById('searchInput').addEventListener('input', (e) => {
         searchTransactions(e.target.value);
     });
 
-    // Close modals on outside click
     document.querySelectorAll('.modal').forEach(modal => {
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
@@ -133,6 +135,7 @@ function openModal(modalId) {
 function closeModal(modalId) {
     document.getElementById(modalId).classList.remove('active');
     resetForm(modalId);
+    editingAccountId = null;
 }
 
 function resetForm(modalId) {
@@ -178,7 +181,7 @@ function dismissInstall() {
 
 function registerServiceWorker() {
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js')
+        navigator.serviceWorker.register('./sw.js')
             .then(reg => console.log('Service Worker registered'))
             .catch(err => console.log('Service Worker registration failed'));
     }
@@ -186,6 +189,19 @@ function registerServiceWorker() {
 
 // Accounts
 function openAccountModal() {
+    editingAccountId = null;
+    openModal('accountModal');
+}
+
+function editAccount(accountId) {
+    const account = data.accounts.find(a => a.id === accountId);
+    if (!account) return;
+    
+    editingAccountId = accountId;
+    document.getElementById('accountName').value = account.name;
+    document.getElementById('accountType').value = account.type;
+    document.getElementById('accountBalance').value = account.balance;
+    
     openModal('accountModal');
 }
 
@@ -199,13 +215,22 @@ function saveAccount() {
         return;
     }
 
-    data.accounts.push({
-        id: Date.now().toString(),
-        name,
-        type,
-        balance,
-        createdAt: new Date().toISOString()
-    });
+    if (editingAccountId) {
+        const account = data.accounts.find(a => a.id === editingAccountId);
+        if (account) {
+            account.name = name;
+            account.type = type;
+            account.balance = balance;
+        }
+    } else {
+        data.accounts.push({
+            id: Date.now().toString(),
+            name,
+            type,
+            balance,
+            createdAt: new Date().toISOString()
+        });
+    }
 
     saveData();
     closeModal('accountModal');
@@ -221,15 +246,27 @@ function displayAccounts() {
         return;
     }
 
-    container.innerHTML = data.accounts.map(account => `
-        <div class="account-item">
-            <div>
-                <div class="account-name">${account.name}</div>
-                <div class="account-type">${account.type}</div>
+    container.innerHTML = data.accounts.map(account => {
+        const isCreditCard = account.type === 'Credit Card';
+        const balanceColor = isCreditCard ? 
+            (account.balance > 0 ? 'var(--danger)' : 'var(--success)') :
+            (account.balance >= 0 ? 'var(--success)' : 'var(--danger)');
+        
+        return `
+            <div class="account-item">
+                <div>
+                    <div class="account-name">${account.name}</div>
+                    <div class="account-type">${account.type}</div>
+                </div>
+                <div style="text-align: right;">
+                    <div class="account-balance" style="color: ${balanceColor}">
+                        ${isCreditCard && account.balance > 0 ? '-' : ''}₱${formatNumber(Math.abs(account.balance))}
+                    </div>
+                    <button onclick="editAccount('${account.id}')" style="background: var(--bg-tertiary); color: var(--text-primary); border: none; padding: 0.25rem 0.75rem; border-radius: 4px; margin-top: 0.25rem; cursor: pointer; font-size: 0.85rem;">Edit</button>
+                </div>
             </div>
-            <div class="account-balance">₱${formatNumber(account.balance)}</div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 function populateAccountDropdowns() {
@@ -268,7 +305,6 @@ function loadCategoryOptions() {
     
     document.getElementById('subcategoryGroup').style.display = 'none';
     
-    // Show installment group for Loans & Installments category
     categorySelect.addEventListener('change', () => {
         const selected = categorySelect.value;
         document.getElementById('installmentGroup').style.display = 
@@ -327,7 +363,6 @@ function saveTransaction() {
         createdAt: new Date().toISOString()
     };
 
-    // Handle installments
     if (category === 'Loans & Installments') {
         transaction.installment = {
             current: parseInt(document.getElementById('txnInstallmentCurrent').value) || 0,
@@ -336,10 +371,18 @@ function saveTransaction() {
         };
     }
 
-    // Update account balance
+    // Handle balance updates based on account type
+    const isCreditCard = account.type === 'Credit Card';
+    
     if (type === 'expense') {
-        account.balance -= amount;
-    } else {
+        if (isCreditCard) {
+            // Credit card: expenses increase what you owe
+            account.balance += amount;
+        } else {
+            // Regular accounts: expenses decrease balance
+            account.balance -= amount;
+        }
+    } else if (type === 'income') {
         account.balance += amount;
     }
 
@@ -366,6 +409,9 @@ function displayTransactions() {
         const installmentText = txn.installment ? 
             `<div class="installment-progress">Payment ${txn.installment.current}/${txn.installment.total} • Remaining: ₱${formatNumber(txn.installment.remaining)}</div>` : '';
         
+        const account = data.accounts.find(a => a.id === txn.accountId);
+        const isCreditCard = account && account.type === 'Credit Card';
+        
         return `
             <div class="transaction-item" onclick="viewTransaction('${txn.id}')">
                 <div class="transaction-header">
@@ -383,7 +429,7 @@ function displayTransactions() {
                 </div>
                 <div class="transaction-category">${txn.category}${txn.subcategory ? ' • ' + txn.subcategory : ''}</div>
                 <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
-                    ${txn.accountName} • Balance: ₱${formatNumber(txn.balanceAfter || 0)}
+                    ${txn.accountName}${isCreditCard ? ' (CC)' : ''} • Balance: ₱${formatNumber(Math.abs(txn.balanceAfter || 0))}
                 </div>
             </div>
         `;
@@ -503,11 +549,9 @@ function saveTransfer() {
 
     if (!fromAccount || !toAccount) return;
 
-    // Update balances
     fromAccount.balance -= (amount + fee);
     toAccount.balance += amount;
 
-    // Create transfer transaction
     const transfer = {
         id: Date.now().toString(),
         type: 'transfer',
@@ -525,7 +569,6 @@ function saveTransfer() {
 
     data.transactions.push(transfer);
 
-    // If there's a fee, create expense transaction
     if (fee > 0) {
         data.transactions.push({
             id: (Date.now() + 1).toString(),
@@ -535,8 +578,8 @@ function saveTransfer() {
             amount: fee,
             accountId: fromId,
             accountName: fromAccount.name,
-            category: 'Bills & Utilities',
-            subcategory: 'Transfer Fee',
+            category: 'Transfer Fees',
+            subcategory: 'Bank Transfer',
             vendor: 'Transfer Fee',
             notes: `Transfer fee: ${fromAccount.name} to ${toAccount.name}`,
             createdAt: new Date().toISOString()
@@ -562,6 +605,7 @@ function saveDebt() {
     const methodId = document.getElementById('debtMethod').value;
     const purpose = document.getElementById('debtPurpose').value;
     const interest = parseFloat(document.getElementById('debtInterest').value) || 0;
+    const isExisting = document.getElementById('debtExisting') ? document.getElementById('debtExisting').checked : false;
 
     if (!name || !date || !amount || !methodId) {
         alert('Please fill in required fields');
@@ -571,8 +615,10 @@ function saveDebt() {
     const account = data.accounts.find(a => a.id === methodId);
     if (!account) return;
 
-    // Deduct from account
-    account.balance -= amount;
+    // Only deduct from account if this is a new loan (not existing)
+    if (!isExisting) {
+        account.balance -= amount;
+    }
 
     const debt = {
         id: Date.now().toString(),
@@ -586,6 +632,7 @@ function saveDebt() {
         purpose,
         interest,
         status: 'outstanding',
+        isExisting: isExisting,
         payments: [],
         createdAt: new Date().toISOString()
     };
@@ -637,7 +684,6 @@ function saveRepayment() {
 
     const method = data.accounts.find(a => a.id === methodId);
 
-    // Record payment
     debt.payments.push({
         date,
         time,
@@ -656,7 +702,6 @@ function saveRepayment() {
         debt.remainingAmount = 0;
     }
 
-    // Handle cash
     if (handling === 'add_cash') {
         const cashAccount = data.accounts.find(a => a.type === 'Cash');
         if (cashAccount) {
@@ -702,7 +747,7 @@ function displayDebts() {
     container.innerHTML = outstanding.map(debt => `
         <div class="debt-item">
             <div class="debt-header">
-                <div class="debt-name">${debt.borrowerName}</div>
+                <div class="debt-name">${debt.borrowerName}${debt.isExisting ? ' <span style="font-size: 0.75rem; color: var(--warning)">(Existing)</span>' : ''}</div>
                 <div class="debt-amount">₱${formatNumber(debt.remainingAmount)}</div>
             </div>
             <div class="debt-details">
@@ -803,7 +848,95 @@ function displayBudgets() {
 // Reports
 function displayReports() {
     displayCategoryReport();
+    displaySpendAnalyzer();
     displayMonthlyComparison();
+}
+
+function getBillingCycleDates() {
+    const today = new Date();
+    const cycleDay = data.billingCycleDay;
+    
+    let cycleStart, cycleEnd;
+    
+    if (today.getDate() >= cycleDay) {
+        cycleStart = new Date(today.getFullYear(), today.getMonth(), cycleDay);
+        cycleEnd = new Date(today.getFullYear(), today.getMonth() + 1, cycleDay - 1);
+    } else {
+        cycleStart = new Date(today.getFullYear(), today.getMonth() - 1, cycleDay);
+        cycleEnd = new Date(today.getFullYear(), today.getMonth(), cycleDay - 1);
+    }
+    
+    return {
+        start: cycleStart.toISOString().split('T')[0],
+        end: cycleEnd.toISOString().split('T')[0]
+    };
+}
+
+function displaySpendAnalyzer() {
+    const container = document.getElementById('spendAnalyzer');
+    if (!container) return;
+    
+    const cycle = getBillingCycleDates();
+    const yearStart = new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0];
+    
+    const categories = [
+        'Sustenance & Dining',
+        'Groceries', 
+        'Transport',
+        'Bills & Utilities',
+        'Shopping',
+        'Health',
+        'Entertainment',
+        'Other'
+    ];
+    
+    const stats = categories.map(cat => {
+        const cycleTotal = data.transactions
+            .filter(t => t.type === 'expense' && 
+                        t.category === cat &&
+                        t.date >= cycle.start && 
+                        t.date <= cycle.end)
+            .reduce((sum, t) => sum + t.amount, 0);
+            
+        const ytdTotal = data.transactions
+            .filter(t => t.type === 'expense' && 
+                        t.category === cat &&
+                        t.date >= yearStart)
+            .reduce((sum, t) => sum + t.amount, 0);
+            
+        return { category: cat, cycle: cycleTotal, ytd: ytdTotal };
+    });
+    
+    container.innerHTML = `
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border);">
+                        <th style="text-align: left; padding: 0.75rem; text-transform: uppercase; font-size: 0.8rem;">Category</th>
+                        <th style="text-align: right; padding: 0.75rem; text-transform: uppercase; font-size: 0.8rem;">This Cycle</th>
+                        <th style="text-align: right; padding: 0.75rem; text-transform: uppercase; font-size: 0.8rem;">Year to Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${stats.map(s => `
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td style="padding: 0.75rem;">${s.category}</td>
+                            <td style="text-align: right; padding: 0.75rem;">₱${formatNumber(s.cycle)}</td>
+                            <td style="text-align: right; padding: 0.75rem;">₱${formatNumber(s.ytd)}</td>
+                        </tr>
+                    `).join('')}
+                    <tr style="font-weight: 600; background: var(--input-bg);">
+                        <td style="padding: 0.75rem;">TOTAL</td>
+                        <td style="text-align: right; padding: 0.75rem;">₱${formatNumber(stats.reduce((sum, s) => sum + s.cycle, 0))}</td>
+                        <td style="text-align: right; padding: 0.75rem;">₱${formatNumber(stats.reduce((sum, s) => sum + s.ytd, 0))}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-secondary);">
+            Billing cycle: ${formatDate(cycle.start)} to ${formatDate(cycle.end)}
+        </div>
+    `;
 }
 
 function displayCategoryReport() {
@@ -915,7 +1048,6 @@ function updateDashboard() {
     document.getElementById('totalDebt').textContent = '₱' + formatNumber(totalDebt);
     document.getElementById('transactionCount').textContent = data.transactions.length;
 
-    // Recent transactions
     const recent = [...data.transactions]
         .sort((a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time))
         .slice(0, 5);
@@ -955,7 +1087,12 @@ function updateAllDisplays() {
 }
 
 function updateTotalBalance() {
-    const total = data.accounts.reduce((sum, acc) => sum + acc.balance, 0);
+    const total = data.accounts.reduce((sum, acc) => {
+        if (acc.type === 'Credit Card') {
+            return sum - Math.abs(acc.balance);
+        }
+        return sum + acc.balance;
+    }, 0);
     document.getElementById('totalBalance').textContent = '₱' + formatNumber(total);
 }
 
@@ -1082,6 +1219,5 @@ Category: ${txn.category}
     alert(details);
 }
 
-// Initialize app
 window.addEventListener('load', init);
 window.addEventListener('beforeunload', saveData);
