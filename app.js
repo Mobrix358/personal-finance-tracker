@@ -40,6 +40,7 @@ let data = {
         'Other': ['Miscellaneous']
     },
     debts: [],
+    myDebts: [],
     budgets: [],
     templates: [],
     billingCycleDay: 1
@@ -47,11 +48,13 @@ let data = {
 
 let deferredPrompt;
 let editingAccountId = null;
+let currentOpenModal = null;
 
 // Initialize
 function init() {
     loadData();
     setupEventListeners();
+    setupBackButtonHandler();
     updateAllDisplays();
     setDefaultDateTime();
     registerServiceWorker();
@@ -62,13 +65,23 @@ function loadData() {
     const saved = localStorage.getItem('financeTrackerData');
     if (saved) {
         data = JSON.parse(saved);
-        // Add billing cycle day if not exists
         if (!data.billingCycleDay) data.billingCycleDay = 1;
+        if (!data.myDebts) data.myDebts = [];
     }
 }
 
 function saveData() {
     localStorage.setItem('financeTrackerData', JSON.stringify(data));
+}
+
+// Handle back button for modals
+function setupBackButtonHandler() {
+    window.addEventListener('popstate', (e) => {
+        if (currentOpenModal) {
+            e.preventDefault();
+            closeModal(currentOpenModal);
+        }
+    });
 }
 
 function setupEventListeners() {
@@ -94,7 +107,8 @@ function setupEventListeners() {
     document.querySelectorAll('.modal').forEach(modal => {
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
-                modal.classList.remove('active');
+                const modalId = modal.id;
+                closeModal(modalId);
             }
         });
     });
@@ -110,6 +124,7 @@ function switchTab(tabName) {
     if (tabName === 'accounts') displayAccounts();
     if (tabName === 'transactions') displayTransactions();
     if (tabName === 'debt') displayDebts();
+    if (tabName === 'credit') displayCreditCards();
     if (tabName === 'budgets') displayBudgets();
     if (tabName === 'reports') displayReports();
     if (tabName === 'dashboard') updateDashboard();
@@ -128,11 +143,19 @@ function setDefaultDateTime() {
 }
 
 function openModal(modalId) {
+    history.pushState({ modal: modalId }, '');
+    currentOpenModal = modalId;
     document.getElementById(modalId).classList.add('active');
     setDefaultDateTime();
 }
 
 function closeModal(modalId) {
+    if (currentOpenModal === modalId) {
+        if (history.state && history.state.modal === modalId) {
+            history.back();
+        }
+        currentOpenModal = null;
+    }
     document.getElementById(modalId).classList.remove('active');
     resetForm(modalId);
     editingAccountId = null;
@@ -252,6 +275,9 @@ function displayAccounts() {
             (account.balance > 0 ? 'var(--danger)' : 'var(--success)') :
             (account.balance >= 0 ? 'var(--success)' : 'var(--danger)');
         
+        const displayBalance = isCreditCard ? Math.abs(account.balance) : account.balance;
+        const prefix = isCreditCard && account.balance > 0 ? 'Owed: ' : '';
+        
         return `
             <div class="account-item">
                 <div>
@@ -260,7 +286,7 @@ function displayAccounts() {
                 </div>
                 <div style="text-align: right;">
                     <div class="account-balance" style="color: ${balanceColor}">
-                        ${isCreditCard && account.balance > 0 ? '-' : ''}₱${formatNumber(Math.abs(account.balance))}
+                        ${prefix}₱${formatNumber(displayBalance)}
                     </div>
                     <button onclick="editAccount('${account.id}')" style="background: var(--bg-tertiary); color: var(--text-primary); border: none; padding: 0.25rem 0.75rem; border-radius: 4px; margin-top: 0.25rem; cursor: pointer; font-size: 0.85rem;">Edit</button>
                 </div>
@@ -270,7 +296,7 @@ function displayAccounts() {
 }
 
 function populateAccountDropdowns() {
-    const dropdowns = ['txnAccount', 'transferFrom', 'transferTo', 'debtMethod', 'repaymentMethod', 'depositAccount'];
+    const dropdowns = ['txnAccount', 'transferFrom', 'transferTo', 'debtMethod', 'repaymentMethod', 'depositAccount', 'ccPaymentAccount'];
     
     dropdowns.forEach(id => {
         const select = document.getElementById(id);
@@ -371,19 +397,20 @@ function saveTransaction() {
         };
     }
 
-    // Handle balance updates based on account type
     const isCreditCard = account.type === 'Credit Card';
     
     if (type === 'expense') {
         if (isCreditCard) {
-            // Credit card: expenses increase what you owe
             account.balance += amount;
         } else {
-            // Regular accounts: expenses decrease balance
             account.balance -= amount;
         }
     } else if (type === 'income') {
-        account.balance += amount;
+        if (isCreditCard) {
+            account.balance -= amount;
+        } else {
+            account.balance += amount;
+        }
     }
 
     transaction.balanceAfter = account.balance;
@@ -591,7 +618,122 @@ function saveTransfer() {
     updateAllDisplays();
 }
 
-// Debt & Lending
+// Credit Cards Tab
+function displayCreditCards() {
+    const container = document.getElementById('creditContent');
+    const creditCards = data.accounts.filter(a => a.type === 'Credit Card');
+    
+    if (creditCards.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">💳</div><p>No credit cards added yet</p></div>';
+        return;
+    }
+
+    let html = '';
+    
+    creditCards.forEach(cc => {
+        const ccTransactions = data.transactions
+            .filter(t => t.accountId === cc.id)
+            .sort((a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time));
+        
+        const currentBalance = cc.balance;
+        const isOverdue = currentBalance > 0;
+        
+        html += `
+            <div class="card">
+                <div class="card-header">
+                    <h3>${cc.name}</h3>
+                    <div style="text-align: right;">
+                        <div style="font-size: 0.85rem; color: var(--text-secondary)">Current Balance</div>
+                        <div style="font-size: 1.5rem; font-weight: 600; color: ${isOverdue ? 'var(--danger)' : 'var(--success)'}">
+                            ₱${formatNumber(Math.abs(currentBalance))}
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary" onclick="openCCPaymentModal('${cc.id}')">Make Payment</button>
+                
+                <h4 style="margin-top: 1.5rem; margin-bottom: 0.75rem;">Recent Transactions</h4>
+                ${ccTransactions.length === 0 ? 
+                    '<p style="color: var(--text-secondary); text-align: center;">No transactions yet</p>' :
+                    ccTransactions.slice(0, 10).map(txn => `
+                        <div class="transaction-item" style="margin-bottom: 0.5rem;">
+                            <div class="transaction-header">
+                                <div>
+                                    <div class="transaction-amount ${txn.type}">
+                                        ${txn.type === 'expense' ? '+' : '-'}₱${formatNumber(txn.amount)}
+                                    </div>
+                                    <div class="transaction-details">${txn.vendor || txn.category}</div>
+                                </div>
+                                <div style="text-align: right; font-size: 0.85rem; color: var(--text-secondary)">
+                                    ${formatDate(txn.date)}
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')
+                }
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function openCCPaymentModal(ccId) {
+    populateAccountDropdowns();
+    document.getElementById('ccPaymentCardId').value = ccId;
+    
+    const cc = data.accounts.find(a => a.id === ccId);
+    if (cc) {
+        document.getElementById('ccPaymentAmount').value = Math.abs(cc.balance);
+    }
+    
+    openModal('ccPaymentModal');
+}
+
+function saveCCPayment() {
+    const ccId = document.getElementById('ccPaymentCardId').value;
+    const fromAccountId = document.getElementById('ccPaymentAccount').value;
+    const amount = parseFloat(document.getElementById('ccPaymentAmount').value);
+    const date = document.getElementById('ccPaymentDate').value;
+    const time = document.getElementById('ccPaymentTime').value;
+    const notes = document.getElementById('ccPaymentNotes').value;
+
+    if (!fromAccountId || !amount || !date) {
+        alert('Please fill in all required fields');
+        return;
+    }
+
+    const cc = data.accounts.find(a => a.id === ccId);
+    const fromAccount = data.accounts.find(a => a.id === fromAccountId);
+
+    if (!cc || !fromAccount) return;
+
+    cc.balance -= amount;
+    fromAccount.balance -= amount;
+
+    data.transactions.push({
+        id: Date.now().toString(),
+        type: 'income',
+        date,
+        time,
+        amount,
+        accountId: ccId,
+        accountName: cc.name,
+        category: 'Loans & Installments',
+        subcategory: 'Credit Card Payment',
+        vendor: 'CC Payment',
+        notes: `Payment from ${fromAccount.name}${notes ? ': ' + notes : ''}`,
+        balanceAfter: cc.balance,
+        createdAt: new Date().toISOString()
+    });
+
+    saveData();
+    closeModal('ccPaymentModal');
+    displayCreditCards();
+    updateAllDisplays();
+}
+
+// Debt & Lending (Money lent to others)
 function openDebtModal() {
     populateAccountDropdowns();
     openModal('debtModal');
@@ -615,7 +757,6 @@ function saveDebt() {
     const account = data.accounts.find(a => a.id === methodId);
     if (!account) return;
 
-    // Only deduct from account if this is a new loan (not existing)
     if (!isExisting) {
         account.balance -= amount;
     }
