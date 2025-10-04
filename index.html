@@ -621,8 +621,8 @@
                 <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
                 <button class="tab-btn" data-tab="transactions">Transactions</button>
                 <button class="tab-btn" data-tab="accounts">Accounts</button>
-                <button class="tab-btn" data-tab="debt">Debt & Lending</button>
-                <button class="tab-btn" data-tab="payments">Payments</button>
+                <button class="tab-btn" data-tab="credit">Credit & Debts</button>
+                <button class="tab-btn" data-tab="debt">Lent Money</button>
                 <button class="tab-btn" data-tab="budgets">Budgets</button>
                 <button class="tab-btn" data-tab="reports">Reports</button>
                 <button class="tab-btn" data-tab="settings">Settings</button>
@@ -701,7 +701,12 @@
                 <div id="accountsList"></div>
             </div>
 
-            <!-- Debt & Lending Tab -->
+            <!-- Credit & Debts Tab (Your own credit cards, installments, loans) -->
+            <div class="tab-content" id="credit">
+                <div id="creditContent"></div>
+            </div>
+
+            <!-- Debt & Lending Tab (Money you lent to others) -->
             <div class="tab-content" id="debt">
                 <button class="btn btn-primary" onclick="openDebtModal()">+ New Loan</button>
                 
@@ -711,11 +716,6 @@
                     </div>
                     <div id="debtList"></div>
                 </div>
-            </div>
-            
-            <!-- Payments Tab -->
-            <div class="tab-content" id="payments">
-                <div id="paymentsContent"></div>
             </div>
             
             <!-- Budgets Tab -->
@@ -951,6 +951,50 @@
             </div>
 
             <button class="btn btn-primary" onclick="saveAccount()">Save Account</button>
+        </div>
+    </div>
+
+    <!-- Credit Card Payment Modal -->
+    <div class="modal" id="ccPaymentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Credit Card Payment</h2>
+                <button class="close-btn" onclick="closeModal('ccPaymentModal')">×</button>
+            </div>
+
+            <input type="hidden" id="ccPaymentCardId">
+
+            <div class="row">
+                <div class="col-2">
+                    <div class="form-group">
+                        <label class="form-label">Date</label>
+                        <input type="date" class="form-input" id="ccPaymentDate">
+                    </div>
+                </div>
+                <div class="col-2">
+                    <div class="form-group">
+                        <label class="form-label">Time</label>
+                        <input type="time" class="form-input" id="ccPaymentTime">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Payment Amount (₱)</label>
+                <input type="number" step="0.01" class="form-input" id="ccPaymentAmount">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Pay From Account</label>
+                <select class="form-select" id="ccPaymentAccount"></select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Notes</label>
+                <textarea class="form-textarea" id="ccPaymentNotes"></textarea>
+            </div>
+
+            <button class="btn btn-primary" onclick="saveCCPayment()">Make Payment</button>
         </div>
     </div>
 
