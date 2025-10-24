@@ -419,6 +419,9 @@
             box-shadow: 0 4px 12px rgba(233, 69, 96, 0.4);
             z-index: 90;
             transition: transform 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .fab:active {
@@ -590,8 +593,48 @@
             font-weight: 600;
         }
 
+        .type-choice-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .type-choice-btn {
+            padding: 2rem 1rem;
+            background: var(--input-bg);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .type-choice-btn:hover {
+            border-color: var(--accent);
+            background: var(--bg-tertiary);
+        }
+
+        .type-choice-btn:active {
+            transform: scale(0.95);
+        }
+
+        .type-choice-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .type-choice-label {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
         @media (max-width: 380px) {
             .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .type-choice-grid {
                 grid-template-columns: 1fr;
             }
         }
@@ -633,15 +676,15 @@
             <!-- Dashboard Tab -->
             <div class="tab-content active" id="dashboard">
                 <div class="quick-actions">
-                    <div class="quick-action-btn" onclick="openAddTransaction('expense')">
+                    <div class="quick-action-btn" onclick="selectTransactionType('expense')">
                         <div class="quick-action-icon">💸</div>
                         <div class="quick-action-label">Add Expense</div>
                     </div>
-                    <div class="quick-action-btn" onclick="openAddTransaction('income')">
+                    <div class="quick-action-btn" onclick="selectTransactionType('income')">
                         <div class="quick-action-icon">💰</div>
                         <div class="quick-action-label">Add Income</div>
                     </div>
-                    <div class="quick-action-btn" onclick="openTransferModal()">
+                    <div class="quick-action-btn" onclick="selectTransactionType('transfer')">
                         <div class="quick-action-icon">🔄</div>
                         <div class="quick-action-label">Transfer</div>
                     </div>
@@ -701,12 +744,12 @@
                 <div id="accountsList"></div>
             </div>
 
-            <!-- Credit & Debts Tab (Your own credit cards, installments, loans) -->
+            <!-- Credit & Debts Tab -->
             <div class="tab-content" id="credit">
                 <div id="creditContent"></div>
             </div>
 
-            <!-- Debt & Lending Tab (Money you lent to others) -->
+            <!-- Debt & Lending Tab -->
             <div class="tab-content" id="debt">
                 <button class="btn btn-primary" onclick="openDebtModal()">+ New Loan</button>
                 
@@ -724,7 +767,7 @@
                 <div id="budgetsList"></div>
             </div>
 
-           <!-- Reports Tab -->
+            <!-- Reports Tab -->
             <div class="tab-content" id="reports">
                 <div class="card">
                     <h3>Spend Analyzer</h3>
@@ -758,7 +801,32 @@
             </div>
         </div>
 
-        <button class="fab" onclick="openAddTransaction()">+</button>
+        <button class="fab" onclick="handleFabClick()">+</button>
+    </div>
+
+    <!-- Transaction Type Selection Modal -->
+    <div class="modal" id="transactionTypeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Select Transaction Type</h2>
+                <button class="close-btn" onclick="closeModal('transactionTypeModal')">×</button>
+            </div>
+            
+            <div class="type-choice-grid">
+                <div class="type-choice-btn" onclick="selectTransactionType('expense')">
+                    <div class="type-choice-icon">💸</div>
+                    <div class="type-choice-label">Expense</div>
+                </div>
+                <div class="type-choice-btn" onclick="selectTransactionType('income')">
+                    <div class="type-choice-icon">💰</div>
+                    <div class="type-choice-label">Income</div>
+                </div>
+                <div class="type-choice-btn" onclick="selectTransactionType('transfer')">
+                    <div class="type-choice-icon">🔄</div>
+                    <div class="type-choice-label">Transfer</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Add Transaction Modal -->
@@ -769,13 +837,7 @@
                 <button class="close-btn" onclick="closeModal('transactionModal')">×</button>
             </div>
 
-            <div class="form-group">
-                <label class="form-label">Type</label>
-                <select class="form-select" id="txnType" onchange="handleTypeChange()">
-                    <option value="expense">Expense</option>
-                    <option value="income">Income</option>
-                </select>
-            </div>
+            <input type="hidden" id="txnType" value="expense">
 
             <div class="row">
                 <div class="col-2">
@@ -812,19 +874,52 @@
                 <select class="form-select" id="txnSubcategory"></select>
             </div>
 
-            <div class="form-group">
-                <label class="form-label">Vendor / Location</label>
-                <input type="text" class="form-input" id="txnVendor" placeholder="e.g. Jollibee, SM Mall">
+            <!-- Expense Only Fields -->
+            <div id="expenseOnlyFields">
+                <div class="form-group">
+                    <label class="form-label">Vendor / Location</label>
+                    <input type="text" class="form-input" id="txnVendor" placeholder="e.g. Jollibee, SM Mall">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Brand (optional)</label>
+                    <input type="text" class="form-input" id="txnBrand">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Item Details</label>
+                    <textarea class="form-textarea" id="txnItems" placeholder="What did you buy?"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Receipt Link (Google Drive)</label>
+                    <input type="url" class="form-input" id="txnReceipt" placeholder="https://drive.google.com/...">
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" class="form-checkbox" id="txnTaxDeductible">
+                        Tax Deductible
+                    </label>
+                </div>
+
+                <div class="form-group" id="installmentGroup" style="display:none">
+                    <label class="form-label">Installment Details</label>
+                    <div class="row">
+                        <div class="col-2">
+                            <input type="number" class="form-input" id="txnInstallmentCurrent" placeholder="Payment #">
+                        </div>
+                        <div class="col-2">
+                            <input type="number" class="form-input" id="txnInstallmentTotal" placeholder="of Total">
+                        </div>
+                    </div>
+                    <input type="number" step="0.01" class="form-input" id="txnInstallmentRemaining" placeholder="Remaining Balance" style="margin-top:0.5rem">
+                </div>
             </div>
 
-            <div class="form-group">
-                <label class="form-label">Brand (optional)</label>
-                <input type="text" class="form-input" id="txnBrand">
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Item Details</label>
-                <textarea class="form-textarea" id="txnItems" placeholder="What did you buy?"></textarea>
+            <!-- Income Only Fields (currently hidden by default) -->
+            <div id="incomeOnlyFields" style="display:none">
+                <!-- Income doesn't need extra fields beyond what's already shown -->
             </div>
 
             <div class="form-group">
@@ -833,35 +928,10 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">Receipt Link (Google Drive)</label>
-                <input type="url" class="form-input" id="txnReceipt" placeholder="https://drive.google.com/...">
-            </div>
-
-            <div class="form-group">
-                <label class="checkbox-label">
-                    <input type="checkbox" class="form-checkbox" id="txnTaxDeductible">
-                    Tax Deductible
-                </label>
-            </div>
-
-            <div class="form-group">
                 <label class="checkbox-label">
                     <input type="checkbox" class="form-checkbox" id="txnRecurring">
                     Recurring Transaction
                 </label>
-            </div>
-
-            <div class="form-group" id="installmentGroup" style="display:none">
-                <label class="form-label">Installment Details</label>
-                <div class="row">
-                    <div class="col-2">
-                        <input type="number" class="form-input" id="txnInstallmentCurrent" placeholder="Payment #">
-                    </div>
-                    <div class="col-2">
-                        <input type="number" class="form-input" id="txnInstallmentTotal" placeholder="of Total">
-                    </div>
-                </div>
-                <input type="number" step="0.01" class="form-input" id="txnInstallmentRemaining" placeholder="Remaining Balance" style="margin-top:0.5rem">
             </div>
 
             <button class="btn btn-primary" onclick="saveTransaction()">Save Transaction</button>
