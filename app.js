@@ -3,7 +3,7 @@ let data = {
     accounts: [],
     transactions: [],
     categories: {
-        income: ['Salary', 'Freelance', 'Investments', 'Tax Return', 'Gifts', 'Other Income'],
+        income: ['Salary', 'Freelance', 'Business', 'Investments', 'Tax Return', 'Gifts', 'Other Income'],
         expense: [
             'Sustenance & Dining',
             'Groceries',
@@ -37,7 +37,11 @@ let data = {
         'Education': ['Tuition', 'Books', 'Courses', 'Supplies'],
         'Travel': ['Flights', 'Accommodation', 'Activities', 'Transport'],
         'Transfer Fees': ['Bank Transfer', 'Wire Transfer', 'Online Transfer'],
-        'Other': ['Miscellaneous']
+        'Other': ['Miscellaneous'],
+        'Salary': ['Main Job', 'Bonus', 'Overtime', 'Commission', '13th Month Pay'],
+        'Freelance': ['Client A', 'Client B', 'Project Work', 'Consulting'],
+        'Business': ['Sales', 'Services', 'Other Revenue'],
+        'Investments': ['Dividends', 'Interest', 'Capital Gains', 'Rental Income']
     },
     debts: [],
     myDebts: [],
@@ -49,6 +53,7 @@ let data = {
 let deferredPrompt;
 let editingAccountId = null;
 let currentOpenModal = null;
+let currentTab = 'dashboard';
 
 // Initialize
 function init() {
@@ -59,6 +64,7 @@ function init() {
     setDefaultDateTime();
     registerServiceWorker();
     setupPWA();
+    updateFabVisibility();
 }
 
 function loadData() {
@@ -115,6 +121,7 @@ function setupEventListeners() {
 }
 
 function switchTab(tabName) {
+    currentTab = tabName;
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
     
@@ -128,6 +135,49 @@ function switchTab(tabName) {
     if (tabName === 'budgets') displayBudgets();
     if (tabName === 'reports') displayReports();
     if (tabName === 'dashboard') updateDashboard();
+    
+    updateFabVisibility();
+}
+
+function updateFabVisibility() {
+    const fab = document.querySelector('.fab');
+    if (currentTab === 'reports' || currentTab === 'settings') {
+        fab.style.display = 'none';
+    } else {
+        fab.style.display = 'flex';
+    }
+}
+
+function handleFabClick() {
+    switch(currentTab) {
+        case 'dashboard':
+        case 'transactions':
+        case 'credit':
+            openTransactionTypeModal();
+            break;
+        case 'accounts':
+            openAccountModal();
+            break;
+        case 'debt':
+            openDebtModal();
+            break;
+        case 'budgets':
+            openBudgetModal();
+            break;
+    }
+}
+
+function openTransactionTypeModal() {
+    openModal('transactionTypeModal');
+}
+
+function selectTransactionType(type) {
+    closeModal('transactionTypeModal');
+    if (type === 'transfer') {
+        openTransferModal();
+    } else {
+        openAddTransaction(type);
+    }
 }
 
 function setDefaultDateTime() {
@@ -310,15 +360,26 @@ function populateAccountDropdowns() {
 // Transactions
 function openAddTransaction(type = 'expense') {
     populateAccountDropdowns();
-    loadCategoryOptions();
-    openModal('transactionModal');
     document.getElementById('txnType').value = type;
+    loadCategoryOptions();
     handleTypeChange();
+    openModal('transactionModal');
 }
 
 function handleTypeChange() {
     const type = document.getElementById('txnType').value;
     loadCategoryOptions();
+    
+    const expenseOnlyFields = document.getElementById('expenseOnlyFields');
+    const incomeOnlyFields = document.getElementById('incomeOnlyFields');
+    
+    if (type === 'expense') {
+        expenseOnlyFields.style.display = 'block';
+        incomeOnlyFields.style.display = 'none';
+    } else if (type === 'income') {
+        expenseOnlyFields.style.display = 'none';
+        incomeOnlyFields.style.display = 'block';
+    }
 }
 
 function loadCategoryOptions() {
@@ -379,22 +440,25 @@ function saveTransaction() {
         accountName: account.name,
         category,
         subcategory,
-        vendor: document.getElementById('txnVendor').value,
-        brand: document.getElementById('txnBrand').value,
-        items: document.getElementById('txnItems').value,
         notes: document.getElementById('txnNotes').value,
-        receipt: document.getElementById('txnReceipt').value,
-        taxDeductible: document.getElementById('txnTaxDeductible').checked,
         recurring: document.getElementById('txnRecurring').checked,
         createdAt: new Date().toISOString()
     };
 
-    if (category === 'Loans & Installments') {
-        transaction.installment = {
-            current: parseInt(document.getElementById('txnInstallmentCurrent').value) || 0,
-            total: parseInt(document.getElementById('txnInstallmentTotal').value) || 0,
-            remaining: parseFloat(document.getElementById('txnInstallmentRemaining').value) || 0
-        };
+    if (type === 'expense') {
+        transaction.vendor = document.getElementById('txnVendor').value;
+        transaction.brand = document.getElementById('txnBrand').value;
+        transaction.items = document.getElementById('txnItems').value;
+        transaction.receipt = document.getElementById('txnReceipt').value;
+        transaction.taxDeductible = document.getElementById('txnTaxDeductible').checked;
+        
+        if (category === 'Loans & Installments') {
+            transaction.installment = {
+                current: parseInt(document.getElementById('txnInstallmentCurrent').value) || 0,
+                total: parseInt(document.getElementById('txnInstallmentTotal').value) || 0,
+                remaining: parseFloat(document.getElementById('txnInstallmentRemaining').value) || 0
+            };
+        }
     }
 
     const isCreditCard = account.type === 'Credit Card';
@@ -1230,7 +1294,7 @@ function updateAllDisplays() {
 function updateTotalBalance() {
     const total = data.accounts.reduce((sum, acc) => {
         if (acc.type === 'Credit Card') {
-            return sum; // Credit cards don't affect total cash balance
+            return sum;
         }
         return sum + acc.balance;
     }, 0);
