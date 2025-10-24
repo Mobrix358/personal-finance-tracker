@@ -428,7 +428,7 @@ function displayTransactions() {
     );
 
     if (sorted.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📝</div><p>No transactions yet</p></div>';
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><p>No transactions yet</p></div>';
         return;
     }
 
@@ -1230,7 +1230,7 @@ function updateAllDisplays() {
 function updateTotalBalance() {
     const total = data.accounts.reduce((sum, acc) => {
         if (acc.type === 'Credit Card') {
-            return sum - Math.abs(acc.balance);
+            return sum; // Credit cards don't affect total cash balance
         }
         return sum + acc.balance;
     }, 0);
