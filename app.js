@@ -278,6 +278,23 @@ function editAccount(accountId) {
     openModal('accountModal');
 }
 
+function deleteAccount(accountId) {
+    if (!confirm('Are you sure you want to delete this account? This will also delete all transactions associated with it.')) {
+        return;
+    }
+    
+    if (!confirm('Really sure? This cannot be undone!')) {
+        return;
+    }
+    
+    data.accounts = data.accounts.filter(a => a.id !== accountId);
+    data.transactions = data.transactions.filter(t => t.accountId !== accountId && t.fromAccountId !== accountId && t.toAccountId !== accountId);
+    
+    saveData();
+    displayAccounts();
+    updateAllDisplays();
+}
+
 function saveAccount() {
     const name = document.getElementById('accountName').value;
     const type = document.getElementById('accountType').value;
@@ -286,6 +303,15 @@ function saveAccount() {
     if (!name) {
         alert('Please enter account name');
         return;
+    }
+
+    if (!editingAccountId) {
+        const duplicate = data.accounts.find(a => a.name.toLowerCase() === name.toLowerCase() && a.type === type);
+        if (duplicate) {
+            if (!confirm(`An account named "${name}" of type "${type}" already exists. Create anyway?`)) {
+                return;
+            }
+        }
     }
 
     if (editingAccountId) {
@@ -338,7 +364,10 @@ function displayAccounts() {
                     <div class="account-balance" style="color: ${balanceColor}">
                         ${prefix}₱${formatNumber(displayBalance)}
                     </div>
-                    <button onclick="editAccount('${account.id}')" style="background: var(--bg-tertiary); color: var(--text-primary); border: none; padding: 0.25rem 0.75rem; border-radius: 4px; margin-top: 0.25rem; cursor: pointer; font-size: 0.85rem;">Edit</button>
+                    <div style="margin-top: 0.5rem;">
+                        <button onclick="editAccount('${account.id}')" style="background: var(--bg-tertiary); color: var(--text-primary); border: none; padding: 0.25rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem; margin-right: 0.25rem;">Edit</button>
+                        <button onclick="deleteAccount('${account.id}')" style="background: var(--danger); color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">Delete</button>
+                    </div>
                 </div>
             </div>
         `;
@@ -411,6 +440,40 @@ function loadSubcategories() {
     } else {
         subcategoryGroup.style.display = 'none';
     }
+}
+
+function deleteTransaction(id) {
+    if (!confirm('Are you sure you want to delete this transaction?')) {
+        return;
+    }
+    
+    const txn = data.transactions.find(t => t.id === id);
+    if (!txn) return;
+    
+    const account = data.accounts.find(a => a.id === txn.accountId);
+    if (account) {
+        const isCreditCard = account.type === 'Credit Card';
+        
+        if (txn.type === 'expense') {
+            if (isCreditCard) {
+                account.balance -= txn.amount;
+            } else {
+                account.balance += txn.amount;
+            }
+        } else if (txn.type === 'income') {
+            if (isCreditCard) {
+                account.balance += txn.amount;
+            } else {
+                account.balance -= txn.amount;
+            }
+        }
+    }
+    
+    data.transactions = data.transactions.filter(t => t.id !== id);
+    
+    saveData();
+    displayTransactions();
+    updateAllDisplays();
 }
 
 function saveTransaction() {
@@ -504,24 +567,27 @@ function displayTransactions() {
         const isCreditCard = account && account.type === 'Credit Card';
         
         return `
-            <div class="transaction-item" onclick="viewTransaction('${txn.id}')">
-                <div class="transaction-header">
-                    <div>
-                        <div class="transaction-amount ${txn.type}">
-                            ${txn.type === 'expense' ? '-' : '+'}₱${formatNumber(txn.amount)}
+            <div class="transaction-item">
+                <div onclick="viewTransaction('${txn.id}')" style="flex: 1;">
+                    <div class="transaction-header">
+                        <div>
+                            <div class="transaction-amount ${txn.type}">
+                                ${txn.type === 'expense' ? '-' : '+'}₱${formatNumber(txn.amount)}
+                            </div>
+                            <div class="transaction-details">${txn.vendor || txn.category}</div>
+                            ${installmentText}
                         </div>
-                        <div class="transaction-details">${txn.vendor || txn.category}</div>
-                        ${installmentText}
+                        <div style="text-align: right;">
+                            <div>${formatDate(txn.date)}</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary)">${txn.time}</div>
+                        </div>
                     </div>
-                    <div style="text-align: right;">
-                        <div>${formatDate(txn.date)}</div>
-                        <div style="font-size: 0.85rem; color: var(--text-secondary)">${txn.time}</div>
+                    <div class="transaction-category">${txn.category}${txn.subcategory ? ' • ' + txn.subcategory : ''}</div>
+                    <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                        ${txn.accountName}${isCreditCard ? ' (CC)' : ''} • Balance: ₱${formatNumber(Math.abs(txn.balanceAfter || 0))}
                     </div>
                 </div>
-                <div class="transaction-category">${txn.category}${txn.subcategory ? ' • ' + txn.subcategory : ''}</div>
-                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
-                    ${txn.accountName}${isCreditCard ? ' (CC)' : ''} • Balance: ₱${formatNumber(Math.abs(txn.balanceAfter || 0))}
-                </div>
+                <button onclick="event.stopPropagation(); deleteTransaction('${txn.id}')" style="background: var(--danger); color: white; border: none; padding: 0.5rem 0.75rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; margin-left: 0.5rem; align-self: flex-start;">Delete</button>
             </div>
         `;
     }).join('');
@@ -550,20 +616,23 @@ function filterTransactions(filter) {
         
         return `
             <div class="transaction-item">
-                <div class="transaction-header">
-                    <div>
-                        <div class="transaction-amount ${txn.type}">
-                            ${txn.type === 'expense' ? '-' : '+'}₱${formatNumber(txn.amount)}
+                <div style="flex: 1;">
+                    <div class="transaction-header">
+                        <div>
+                            <div class="transaction-amount ${txn.type}">
+                                ${txn.type === 'expense' ? '-' : '+'}₱${formatNumber(txn.amount)}
+                            </div>
+                            <div class="transaction-details">${txn.vendor || txn.category}</div>
+                            ${installmentText}
                         </div>
-                        <div class="transaction-details">${txn.vendor || txn.category}</div>
-                        ${installmentText}
+                        <div style="text-align: right;">
+                            <div>${formatDate(txn.date)}</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary)">${txn.time}</div>
+                        </div>
                     </div>
-                    <div style="text-align: right;">
-                        <div>${formatDate(txn.date)}</div>
-                        <div style="font-size: 0.85rem; color: var(--text-secondary)">${txn.time}</div>
-                    </div>
+                    <div class="transaction-category">${txn.category}</div>
                 </div>
-                <div class="transaction-category">${txn.category}</div>
+                <button onclick="deleteTransaction('${txn.id}')" style="background: var(--danger); color: white; border: none; padding: 0.5rem 0.75rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; margin-left: 0.5rem;">Delete</button>
             </div>
         `;
     }).join('');
@@ -592,16 +661,19 @@ function searchTransactions(query) {
 
     container.innerHTML = results.map(txn => `
         <div class="transaction-item">
-            <div class="transaction-header">
-                <div>
-                    <div class="transaction-amount ${txn.type}">
-                        ${txn.type === 'expense' ? '-' : '+'}₱${formatNumber(txn.amount)}
+            <div style="flex: 1;">
+                <div class="transaction-header">
+                    <div>
+                        <div class="transaction-amount ${txn.type}">
+                            ${txn.type === 'expense' ? '-' : '+'}₱${formatNumber(txn.amount)}
+                        </div>
+                        <div class="transaction-details">${txn.vendor || txn.category}</div>
                     </div>
-                    <div class="transaction-details">${txn.vendor || txn.category}</div>
+                    <div>${formatDate(txn.date)}</div>
                 </div>
-                <div>${formatDate(txn.date)}</div>
+                <div class="transaction-category">${txn.category}</div>
             </div>
-            <div class="transaction-category">${txn.category}</div>
+            <button onclick="deleteTransaction('${txn.id}')" style="background: var(--danger); color: white; border: none; padding: 0.5rem 0.75rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; margin-left: 0.5rem;">Delete</button>
         </div>
     `).join('');
 }
@@ -803,6 +875,18 @@ function openDebtModal() {
     openModal('debtModal');
 }
 
+function deleteDebt(debtId) {
+    if (!confirm('Are you sure you want to delete this loan record?')) {
+        return;
+    }
+    
+    data.debts = data.debts.filter(d => d.id !== debtId);
+    
+    saveData();
+    displayDebts();
+    updateAllDisplays();
+}
+
 function saveDebt() {
     const name = document.getElementById('debtName').value;
     const date = document.getElementById('debtDate').value;
@@ -822,7 +906,11 @@ function saveDebt() {
     if (!account) return;
 
     if (!isExisting) {
-        account.balance -= amount;
+        if (account.type === 'Credit Card') {
+            account.balance += amount;
+        } else {
+            account.balance -= amount;
+        }
     }
 
     const debt = {
@@ -971,9 +1059,14 @@ function displayDebts() {
                     `).join('')}
                 </div>
             ` : ''}
-            <button class="btn btn-secondary" style="margin-top:0.75rem" onclick="openRepaymentModal('${debt.id}')">
-                Record Repayment
-            </button>
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="openRepaymentModal('${debt.id}')">
+                    Record Repayment
+                </button>
+                <button class="btn btn-danger" style="flex: 0 0 auto; padding: 0.75rem 1rem;" onclick="deleteDebt('${debt.id}')">
+                    Delete
+                </button>
+            </div>
         </div>
     `).join('');
 }
