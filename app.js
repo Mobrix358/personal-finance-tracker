@@ -844,10 +844,14 @@ function saveCCPayment() {
 
     if (!cc || !fromAccount) return;
 
-    // IMPORTANT: For CC, positive balance = you owe money
-    // Payment REDUCES what you owe, so we SUBTRACT
-    cc.balance -= amount;
-    fromAccount.balance -= amount;
+// FIXED: Calculate payment correctly regardless of how debt was initially entered
+// Take absolute value of current balance (debt), subtract payment, then set new balance
+// Positive result = still owe money, Negative result = overpaid (credit)
+const currentDebt = Math.abs(cc.balance);
+const newBalance = currentDebt - amount;
+cc.balance = newBalance;
+
+fromAccount.balance -= amount;
 
     data.transactions.push({
         id: Date.now().toString(),
