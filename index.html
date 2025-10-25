@@ -813,15 +813,15 @@
             </div>
             
             <div class="type-choice-grid">
-                <div class="type-choice-btn" onclick="selectTransactionType('expense')">
+                <div class="type-choice-btn" onclick="event.stopPropagation(); selectTransactionType('expense')">
                     <div class="type-choice-icon">💸</div>
                     <div class="type-choice-label">Expense</div>
                 </div>
-                <div class="type-choice-btn" onclick="selectTransactionType('income')">
+                <div class="type-choice-btn" onclick="event.stopPropagation(); selectTransactionType('income')">
                     <div class="type-choice-icon">💰</div>
                     <div class="type-choice-label">Income</div>
                 </div>
-                <div class="type-choice-btn" onclick="selectTransactionType('transfer')">
+                <div class="type-choice-btn" onclick="event.stopPropagation(); selectTransactionType('transfer')">
                     <div class="type-choice-icon">🔄</div>
                     <div class="type-choice-label">Transfer</div>
                 </div>
