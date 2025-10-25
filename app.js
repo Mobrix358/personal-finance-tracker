@@ -844,6 +844,8 @@ function saveCCPayment() {
 
     if (!cc || !fromAccount) return;
 
+    // IMPORTANT: For CC, positive balance = you owe money
+    // Payment REDUCES what you owe, so we SUBTRACT
     cc.balance -= amount;
     fromAccount.balance -= amount;
 
@@ -1063,20 +1065,41 @@ function displayDebts() {
                 <button class="btn btn-secondary" style="flex: 1;" onclick="openRepaymentModal('${debt.id}')">
                     Record Repayment
                 </button>
-                <button class="btn btn-danger" style="flex: 0 0 auto; padding: 0.75rem 1rem;" onclick="deleteDebt('${debt.id}')">
-                    Delete
-                </button>
+                <button onclick="deleteDebt('${debt.id}')" style="background: var(--danger); color: white; border: none; padding: 0.5rem 0.75rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">Delete</button>
             </div>
         </div>
     `).join('');
 }
 
 // Budgets
-function openBudgetModal() {
+function openBudgetModal(budgetCategory = null) {
     const select = document.getElementById('budgetCategory');
     select.innerHTML = '<option value="">Select Category</option>' + 
         data.categories.expense.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+    
+    if (budgetCategory) {
+        const budget = data.budgets.find(b => b.category === budgetCategory);
+        if (budget) {
+            select.value = budget.category;
+            select.disabled = true;
+            document.getElementById('budgetAmount').value = budget.amount;
+            document.getElementById('budgetRollover').checked = budget.rollover;
+        }
+    } else {
+        select.disabled = false;
+    }
+    
     openModal('budgetModal');
+}
+
+function deleteBudget(category) {
+    if (!confirm(`Delete budget for ${category}?`)) {
+        return;
+    }
+    
+    data.budgets = data.budgets.filter(b => b.category !== category);
+    saveData();
+    displayBudgets();
 }
 
 function saveBudget() {
@@ -1127,7 +1150,13 @@ function displayBudgets() {
 
         return `
             <div class="card">
-                <h3>${budget.category}</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <h3 style="margin: 0;">${budget.category}</h3>
+                    <div>
+                        <button onclick="openBudgetModal('${budget.category}')" style="background: var(--bg-tertiary); color: var(--text-primary); border: none; padding: 0.25rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem; margin-right: 0.25rem;">Edit</button>
+                        <button onclick="deleteBudget('${budget.category}')" style="background: var(--danger); color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">Delete</button>
+                    </div>
+                </div>
                 <div style="display: flex; justify-content: space-between; margin: 0.5rem 0;">
                     <span>Spent: ₱${formatNumber(spent)}</span>
                     <span>Budget: ₱${formatNumber(budget.amount)}</span>
