@@ -173,11 +173,14 @@ function openTransactionTypeModal() {
 
 function selectTransactionType(type) {
     closeModal('transactionTypeModal');
-    if (type === 'transfer') {
-        openTransferModal();
-    } else {
-        openAddTransaction(type);
-    }
+    // Small delay to ensure smooth transition between modals
+    setTimeout(() => {
+        if (type === 'transfer') {
+            openTransferModal();
+        } else {
+            openAddTransaction(type);
+        }
+    }, 100);
 }
 
 function setDefaultDateTime() {
